@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "HRMS App",
+    "slug": "hrms-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app requires access to your location for Geo-Fence mobile attendance verification.",
+        "NSCameraUsageDescription": "This app requires camera access for face attendance verification."
+      }
+    },
+    "android": {
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+// Light Theme Palette for Techno HRMS
+export const COLORS = {
+  primary: '#f15e8c',
+  secondary: '#fdac64',
+  accent: '#f15e8c',
+  background: '#FEFEFE',
+  cardBg: '#FFFFFF',
+  textPrimary: '#3f4752',
+  textSecondary: '#6c757d',
+  border: '#e2e8f0',
+  inputBg: '#f8fafc',
+  headerBg: '#FFFFFF',
+  drawerBg: '#FFFFFF',
+  activeTabBg: 'rgba(241, 94, 140, 0.12)',
+  activeTabBorder: '#f15e8c',
+  success: '#10b981',
+  danger: '#ef4444',
+  warning: '#f59e0b',
+  badgeBg: 'rgba(253, 172, 100, 0.15)',
+};
