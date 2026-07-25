@@ -140,7 +140,7 @@ export const AdvanceLoanScreen = () => {
               ))}
             </View>
 
-            <Text style={styles.inputLabel}>Requested Amount (₹ INR)</Text>
+            <Text style={styles.inputLabel}>Requested Amount</Text>
             <TextInput
               style={styles.input}
               value={amount}
@@ -150,7 +150,7 @@ export const AdvanceLoanScreen = () => {
               placeholderTextColor={COLORS.textSecondary}
             />
 
-            <Text style={styles.inputLabel}>Monthly EMI Deduction (₹ INR)</Text>
+            <Text style={styles.inputLabel}>Monthly EMI Deduction</Text>
             <TextInput
               style={styles.input}
               value={emi}

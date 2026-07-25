@@ -10,15 +10,24 @@ export const CustomInput = ({
   secureTextEntry,
   keyboardType = 'default',
   icon: Icon,
-  error
+  error,
+  multiline = false,
+  numberOfLines = 1,
+  style,
+  inputStyle
 }) => {
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputWrapper, error && styles.inputError]}>
-        {Icon && <Icon size={18} color={COLORS.textSecondary} style={styles.icon} />}
+      <View style={[
+        styles.inputWrapper, 
+        multiline && styles.multilineWrapper, 
+        error && styles.inputError,
+        style
+      ]}>
+        {Icon && <Icon size={18} color={COLORS.textSecondary} style={[styles.icon, multiline && styles.multilineIcon]} />}
         <TextInput
-          style={styles.input}
+          style={[styles.input, multiline && styles.multilineInput, inputStyle]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -26,6 +35,9 @@ export const CustomInput = ({
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           autoCapitalize="none"
+          multiline={multiline}
+          numberOfLines={numberOfLines}
+          textAlignVertical={multiline ? 'top' : 'center'}
         />
       </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -53,16 +65,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 48,
   },
+  multilineWrapper: {
+    height: 'auto',
+    minHeight: 90,
+    alignItems: 'flex-start',
+    paddingVertical: 10,
+  },
   inputError: {
     borderColor: COLORS.danger,
   },
   icon: {
     marginRight: 10,
   },
+  multilineIcon: {
+    marginTop: 2,
+  },
   input: {
     flex: 1,
     color: COLORS.textPrimary,
     fontSize: 14,
+  },
+  multilineInput: {
+    minHeight: 70,
+    textAlignVertical: 'top',
   },
   errorText: {
     fontSize: 11,

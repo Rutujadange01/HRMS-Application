@@ -2,15 +2,25 @@ import React, { useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { HRMSContext } from '../../context/HRMSContext';
+import { EmployeeDashboardScreen } from './EmployeeDashboardScreen';
 import { StatCard } from '../../components/StatCard';
 import { AttendanceBadge } from '../../components/AttendanceBadge';
+import { BirthdayAnnouncementCard } from '../../components/BirthdayAnnouncementCard';
+import { LateEmployeesCard } from '../../components/LateEmployeesCard';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { COLORS } from '../../constants/theme';
-import { Users, Clock, Calendar, Building2, LogOut, CheckCircle2, UserCheck, AlertCircle } from 'lucide-react-native';
+import { Users, Clock, Calendar, Building2, LogOut, CheckCircle2, UserCheck, AlertCircle, Receipt } from 'lucide-react-native';
 
 export const AdminDashboardScreen = ({ navigation }) => {
   const { profile, logout } = useContext(AuthContext);
   const { company, employees, departments, attendanceLogs, leaves, clockedIn, toggleClockIn, lastClockInTime } = useContext(HRMSContext);
+
+  const rawRole = (profile?.role || profile?.Role || 'Employee').toString().trim().toLowerCase();
+  const isAdminOrHR = rawRole === 'admin' || rawRole === 'hr' || rawRole === 'manager';
+
+  if (!isAdminOrHR) {
+    return <EmployeeDashboardScreen navigation={navigation} />;
+  }
 
   const userRole = profile?.role || profile?.Role || 'Admin';
   const todayStr = new Date().toISOString().split('T')[0];
@@ -145,6 +155,14 @@ export const AdminDashboardScreen = ({ navigation }) => {
         />
       </View>
 
+      {/* Late Employees Stream (Admin Only) */}
+      <LateEmployeesCard 
+        attendanceLogs={attendanceLogs} 
+        employees={employees} 
+        profile={profile} 
+        navigation={navigation}
+      />
+
       {/* Quick Action Navigation Grid */}
       <Text style={styles.sectionTitle}>Quick Management Modules</Text>
       <View style={styles.quickGrid}>
@@ -164,6 +182,14 @@ export const AdminDashboardScreen = ({ navigation }) => {
           <Text style={styles.tileSub}>Clock history & shifts</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.quickTile} onPress={() => navigation.navigate('BulkAttendance')}>
+          <View style={[styles.tileIcon, { backgroundColor: 'rgba(241, 94, 140, 0.12)' }]}>
+            <Users size={22} color={COLORS.primary} />
+          </View>
+          <Text style={styles.tileTitle}>Bulk Mark Attendance</Text>
+          <Text style={styles.tileSub}>Batch mark punch IN/OUT</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.quickTile} onPress={() => navigation.navigate('LeaveManagement')}>
           <View style={[styles.tileIcon, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
             <Calendar size={22} color={COLORS.success} />
@@ -178,6 +204,14 @@ export const AdminDashboardScreen = ({ navigation }) => {
           </View>
           <Text style={styles.tileTitle}>Company Setup</Text>
           <Text style={styles.tileSub}>Org policy & departments</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.quickTile} onPress={() => navigation.navigate('ExpenseClaim')}>
+          <View style={[styles.tileIcon, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+            <Receipt size={22} color={COLORS.success} />
+          </View>
+          <Text style={styles.tileTitle}>Expense Claims</Text>
+          <Text style={styles.tileSub}>Approve & process claims</Text>
         </TouchableOpacity>
       </View>
 
@@ -198,6 +232,9 @@ export const AdminDashboardScreen = ({ navigation }) => {
           <AttendanceBadge status={log.status || 'Present'} />
         </View>
       ))}
+
+      {/* Birthday Announcement Card at the bottom */}
+      <BirthdayAnnouncementCard employees={employees} profile={profile} />
     </ScrollView>
   );
 };

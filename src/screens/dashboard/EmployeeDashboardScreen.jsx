@@ -4,13 +4,14 @@ import { AuthContext } from '../../context/AuthContext';
 import { HRMSContext } from '../../context/HRMSContext';
 import { StatCard } from '../../components/StatCard';
 import { AttendanceBadge } from '../../components/AttendanceBadge';
+import { BirthdayAnnouncementCard } from '../../components/BirthdayAnnouncementCard';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { COLORS } from '../../constants/theme';
-import { Users, Clock, Calendar, LogOut, UserCheck, AlertCircle, IndianRupee, CreditCard, FileText } from 'lucide-react-native';
+import { Users, Clock, Calendar, LogOut, UserCheck, AlertCircle, IndianRupee, CreditCard, FileText, Receipt } from 'lucide-react-native';
 
 export const EmployeeDashboardScreen = ({ navigation }) => {
   const { profile, logout } = useContext(AuthContext);
-  const { company, attendanceLogs, leaves, clockedIn, toggleClockIn, lastClockInTime } = useContext(HRMSContext);
+  const { company, employees, attendanceLogs, leaves, clockedIn, toggleClockIn, lastClockInTime } = useContext(HRMSContext);
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -153,12 +154,36 @@ export const EmployeeDashboardScreen = ({ navigation }) => {
           <Text style={styles.tileSub}>Request casual/paid leave</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.quickTile} onPress={() => navigation.navigate('MissPunchRequest')}>
+          <View style={[styles.tileIcon, { backgroundColor: 'rgba(241, 94, 140, 0.12)' }]}>
+            <Clock size={22} color={COLORS.primary} />
+          </View>
+          <Text style={styles.tileTitle}>Miss Punch Request</Text>
+          <Text style={styles.tileSub}>Request missed clock in/out</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.quickTile} onPress={() => navigation.navigate('AttendanceCorrection')}>
+          <View style={[styles.tileIcon, { backgroundColor: 'rgba(253, 172, 100, 0.15)' }]}>
+            <Clock size={22} color={COLORS.secondary} />
+          </View>
+          <Text style={styles.tileTitle}>Attendance Correction</Text>
+          <Text style={styles.tileSub}>Correct punch time discrepancies</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.quickTile} onPress={() => navigation.navigate('AdvanceLoan')}>
           <View style={[styles.tileIcon, { backgroundColor: 'rgba(139, 92, 246, 0.12)' }]}>
             <CreditCard size={22} color="#8b5cf6" />
           </View>
           <Text style={styles.tileTitle}>Advance & Loans</Text>
           <Text style={styles.tileSub}>Request salary advance</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.quickTile} onPress={() => navigation.navigate('ExpenseClaim')}>
+          <View style={[styles.tileIcon, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+            <Receipt size={22} color={COLORS.success} />
+          </View>
+          <Text style={styles.tileTitle}>Expense Claims</Text>
+          <Text style={styles.tileSub}>Reimbursements & claims</Text>
         </TouchableOpacity>
       </View>
 
@@ -185,6 +210,9 @@ export const EmployeeDashboardScreen = ({ navigation }) => {
           </View>
         ))
       )}
+
+      {/* Birthday Announcement Card at the bottom */}
+      <BirthdayAnnouncementCard employees={employees} profile={profile} />
     </ScrollView>
   );
 };

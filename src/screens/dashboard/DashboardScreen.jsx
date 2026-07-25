@@ -6,10 +6,10 @@ import { AdminDashboardScreen } from './AdminDashboardScreen';
 export const DashboardScreen = ({ navigation }) => {
   const { profile } = useContext(AuthContext);
 
-  const userRole = profile?.role || profile?.Role || 'Employee';
-  const isEmployee = userRole === 'Employee';
+  const rawRole = (profile?.role || profile?.Role || 'Employee').toString().trim().toLowerCase();
+  const isAdminOrHR = rawRole === 'admin' || rawRole === 'hr' || rawRole === 'manager';
 
-  if (isEmployee) {
+  if (!isAdminOrHR) {
     return <EmployeeDashboardScreen navigation={navigation} />;
   }
 

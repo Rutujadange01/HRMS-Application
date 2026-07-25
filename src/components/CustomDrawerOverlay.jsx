@@ -21,7 +21,8 @@ import {
   X,
   Building2,
   FolderTree,
-  UserPlus
+  UserPlus,
+  Receipt
 } from 'lucide-react-native';
 
 export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute }) => {
@@ -35,7 +36,7 @@ export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute
       icon: LayoutDashboard,
       roles: ['Admin', 'HR', 'Manager', 'Employee'],
       subModules: [
-        { label: 'Admin Dashboard', icon: LayoutDashboard, route: 'Dashboard', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
+        { label: userRole === 'Employee' ? 'Employee Dashboard' : 'Admin Dashboard', icon: LayoutDashboard, route: 'Dashboard', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
         { label: 'Employee Self Service', icon: UserCheck, route: 'EssDashboard', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
       ]
     },
@@ -57,6 +58,9 @@ export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute
       subModules: [
         { label: 'Attendance & Geo/QR', icon: Clock, route: 'DailyAttendance', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
         { label: 'Leave Management', icon: Calendar, route: 'LeaveManagement', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
+        { label: 'Miss Punch Requests', icon: Clock, route: 'MissPunchRequest', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
+        { label: 'Attendance Correction', icon: Clock, route: 'AttendanceCorrection', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
+        { label: 'Bulk Mark Attendance', icon: Users, route: 'BulkAttendance', roles: ['Admin', 'HR', 'Manager'] },
       ]
     },
     {
@@ -68,6 +72,7 @@ export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute
         { label: 'Payroll & Payslips', icon: IndianRupee, route: 'ProcessPayroll', roles: ['Admin', 'HR'] },
         { label: 'Payroll Setup Wizard', icon: Wand2, route: 'PayrollWizard', roles: ['Admin', 'HR'] },
         { label: 'Advance & Loans', icon: CreditCard, route: 'AdvanceLoan', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
+        { label: 'Expense Claims', icon: Receipt, route: 'ExpenseClaim', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
       ]
     },
     {

@@ -48,20 +48,24 @@ export const PrimaryButton = ({ title, onPress, loading, variant = 'primary', ic
 
 const styles = StyleSheet.create({
   button: {
-    height: 48,
+    minHeight: 48,
+    width: '100%',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     marginVertical: 6,
   },
   contentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    flexWrap: 'wrap',
   },
   text: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
+    textAlign: 'center',
   },
 });

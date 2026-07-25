@@ -92,7 +92,7 @@ export const INITIAL_EMPLOYEES = [
     DOJ: '2021-03-15',
     joiningDate: '2021-03-15',
     DOR: '',
-    DOB: '1992-06-18',
+    DOB: '1992-07-25',
     DepartmentID: 'dept_02',
     department: 'Human Resources',
     MobileNo: '+1 (555) 234-5678',
@@ -218,47 +218,19 @@ export const INITIAL_SHIFTS = [
   }
 ];
 
-// SSMS Table: AttendancePunch
-export const INITIAL_ATTENDANCE = [
-  {
-    CompanyID: 'comp_01',
-    PunchID: 'punch_001',
-    id: 'att_01',
-    UserID: 'emp_001',
-    employeeId: 'emp_001',
-    UserName: 'Sarah Jenkins',
-    employeeName: 'Sarah Jenkins',
-    Time: '08:52 AM',
-    clockIn: '08:52 AM',
-    clockOut: '05:45 PM',
-    Photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-    Location: 'Office - HQ',
-    location: 'Office - HQ',
-    latitude: 37.7749,
-    longitude: -122.4194,
-    Type: 'In',
-    CreatedOn: '2026-07-23T08:52:00.000Z',
-    PostingDate: '2026-07-23',
-    date: '2026-07-23',
-    Flag: 'P',
-    status: 'Present',
-    EarlyMin: 8,
-    LateMin: 0,
-    CreatedByUId: 'emp_001'
-  }
-];
+// SSMS Table: AttendancePunch (Starts empty - populates via real-time Punch IN / OUT actions)
+export const INITIAL_ATTENDANCE = [];
 
-export const INITIAL_LEAVES = [
-  {
-    id: 'leave_01',
-    CompanyID: 'comp_01',
-    employeeId: 'emp_002',
-    employeeName: 'Alex Rivers',
-    type: 'Casual Leave',
-    startDate: '2026-07-28',
-    endDate: '2026-07-30',
-    reason: 'Personal work',
-    status: 'Pending',
-    appliedOn: '2026-07-23'
-  }
-];
+// SSMS Table: Leave Applications (Starts empty - populates via real-time Leave requests)
+export const INITIAL_LEAVES = [];
+
+// SSMS Table: Emp_MissPunch (Starts empty - populates via real-time Miss Punch requests)
+export const INITIAL_MISSPUNCH = [];
+
+// SSMS Table: Attendance_CorrectionRequests (Starts empty - populates via real-time Correction requests)
+export const INITIAL_CORRECTIONS = [];
+
+// SSMS Table: Emp_ExpenseClaims (Starts empty - populates via real-time Expense Claims)
+export const INITIAL_EXPENSES = [];
+
+

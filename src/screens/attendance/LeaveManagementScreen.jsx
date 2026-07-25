@@ -4,6 +4,7 @@ import { HRMSContext } from '../../context/HRMSContext';
 import { AuthContext } from '../../context/AuthContext';
 import { AttendanceBadge } from '../../components/AttendanceBadge';
 import { CustomInput } from '../../components/CustomInput';
+import { DatePickerInput } from '../../components/DatePickerInput';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { COLORS } from '../../constants/theme';
 import { Calendar, FileText, Check, X, PlusCircle, Edit3, Trash2, Filter, RotateCcw } from 'lucide-react-native';
@@ -170,21 +171,19 @@ export const LeaveManagementScreen = ({ navigation }) => {
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
-              <CustomInput
+              <DatePickerInput
                 label="From Date"
                 placeholder="YYYY-MM-DD"
                 value={filterFromDate}
                 onChangeText={setFilterFromDate}
-                icon={Calendar}
               />
             </View>
             <View style={{ flex: 1 }}>
-              <CustomInput
+              <DatePickerInput
                 label="To Date"
                 placeholder="YYYY-MM-DD"
                 value={filterToDate}
                 onChangeText={setFilterToDate}
-                icon={Calendar}
               />
             </View>
           </View>
@@ -211,20 +210,18 @@ export const LeaveManagementScreen = ({ navigation }) => {
             ))}
           </View>
 
-          <CustomInput
-            label="Start Date (YYYY-MM-DD)"
+          <DatePickerInput
+            label="Start Date"
             placeholder="2026-08-01"
             value={startDate}
             onChangeText={setStartDate}
-            icon={Calendar}
           />
 
-          <CustomInput
-            label="End Date (YYYY-MM-DD)"
+          <DatePickerInput
+            label="End Date"
             placeholder="2026-08-03"
             value={endDate}
             onChangeText={setEndDate}
-            icon={Calendar}
           />
 
           <CustomInput
@@ -233,6 +230,8 @@ export const LeaveManagementScreen = ({ navigation }) => {
             value={reason}
             onChangeText={setReason}
             icon={FileText}
+            multiline={true}
+            numberOfLines={3}
           />
 
           <PrimaryButton

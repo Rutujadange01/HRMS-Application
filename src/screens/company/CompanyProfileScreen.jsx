@@ -461,7 +461,7 @@ export const CompanyProfileScreen = ({ navigation }) => {
             />
 
             <CustomInput
-              label="Geo-Fence Radius (Meters)"
+              label="Geo-Fence Radius"
               value={geoFenceRadius}
               onChangeText={setGeoFenceRadius}
               icon={MapPin}

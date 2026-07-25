@@ -2,9 +2,10 @@ import React, { useContext, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import { AttendanceBadge } from '../../components/AttendanceBadge';
 import { COLORS } from '../../constants/theme';
-import { Mail, Phone, Calendar, Shield, ArrowLeft, Trash2, Edit3, Save, X, IndianRupee, Camera, Check } from 'lucide-react-native';
+import { Mail, Phone, Calendar, Shield, ArrowLeft, Trash2, Edit3, Save, X, IndianRupee, Camera, Check, Building, CreditCard, Landmark, User } from 'lucide-react-native';
 import { HRMSContext } from '../../context/HRMSContext';
 import { CustomInput } from '../../components/CustomInput';
+import { DatePickerInput } from '../../components/DatePickerInput';
 import { PrimaryButton } from '../../components/PrimaryButton';
 
 const AVATAR_PRESETS = [
@@ -56,6 +57,13 @@ export const EmployeeDetailScreen = ({ route, navigation }) => {
   const [editSalary, setEditSalary] = useState(String(currentEmp.MonthlyPayAmt || 45000));
   const [editStatus, setEditStatus] = useState(currentEmp.status || currentEmp.Status || 'Active');
   const [editAvatar, setEditAvatar] = useState(currentEmp.avatar || currentEmp.UPhoto || AVATAR_PRESETS[0]);
+  const [editDob, setEditDob] = useState(currentEmp.dob || currentEmp.DOB || '1995-01-15');
+  const [editDoj, setEditDoj] = useState(currentEmp.joiningDate || currentEmp.DOJ || '2021-03-15');
+  const [editBankName, setEditBankName] = useState(currentEmp.bankName || currentEmp.BankName || 'HDFC Bank Ltd');
+  const [editAccountNo, setEditAccountNo] = useState(currentEmp.accountNo || currentEmp.AccountNo || '50100298765432');
+  const [editIfscCode, setEditIfscCode] = useState(currentEmp.ifscCode || currentEmp.IFSCCode || 'HDFC0001234');
+  const [editBranchName, setEditBranchName] = useState(currentEmp.branchName || currentEmp.BranchName || 'Main HQ Branch');
+  const [editAccountHolderName, setEditAccountHolderName] = useState(currentEmp.accountHolderName || currentEmp.AccountHolderName || currentEmp.name || currentEmp.FullName || '');
 
   const openEditModal = () => {
     setEditName(currentEmp.FullName || currentEmp.name || '');
@@ -67,6 +75,13 @@ export const EmployeeDetailScreen = ({ route, navigation }) => {
     setEditSalary(String(currentEmp.MonthlyPayAmt || 45000));
     setEditStatus(currentEmp.status || currentEmp.Status || 'Active');
     setEditAvatar(currentEmp.avatar || currentEmp.UPhoto || AVATAR_PRESETS[0]);
+    setEditDob(currentEmp.dob || currentEmp.DOB || '1995-01-15');
+    setEditDoj(currentEmp.joiningDate || currentEmp.DOJ || '2021-03-15');
+    setEditBankName(currentEmp.bankName || currentEmp.BankName || 'HDFC Bank Ltd');
+    setEditAccountNo(currentEmp.accountNo || currentEmp.AccountNo || '50100298765432');
+    setEditIfscCode(currentEmp.ifscCode || currentEmp.IFSCCode || 'HDFC0001234');
+    setEditBranchName(currentEmp.branchName || currentEmp.BranchName || 'Main HQ Branch');
+    setEditAccountHolderName(currentEmp.accountHolderName || currentEmp.AccountHolderName || currentEmp.name || currentEmp.FullName || '');
     setEditModalVisible(true);
   };
 
@@ -98,6 +113,20 @@ export const EmployeeDetailScreen = ({ route, navigation }) => {
         status: editStatus,
         UPhoto: editAvatar,
         avatar: editAvatar,
+        DOB: editDob,
+        dob: editDob,
+        DOJ: editDoj,
+        joiningDate: editDoj,
+        BankName: editBankName,
+        bankName: editBankName,
+        AccountNo: editAccountNo,
+        accountNo: editAccountNo,
+        IFSCCode: editIfscCode,
+        ifscCode: editIfscCode,
+        BranchName: editBranchName,
+        branchName: editBranchName,
+        AccountHolderName: editAccountHolderName,
+        accountHolderName: editAccountHolderName,
         UpdatedOn: new Date().toISOString()
       };
 
@@ -206,8 +235,61 @@ export const EmployeeDetailScreen = ({ route, navigation }) => {
         <View style={styles.row}>
           <Calendar size={18} color={COLORS.primary} />
           <View style={styles.rowContent}>
+            <Text style={styles.rowLabel}>Date of Birth</Text>
+            <Text style={styles.rowValue}>{currentEmp.dob || currentEmp.DOB || 'N/A'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <Calendar size={18} color={COLORS.primary} />
+          <View style={styles.rowContent}>
             <Text style={styles.rowLabel}>Date Joined</Text>
             <Text style={styles.rowValue}>{currentEmp.joiningDate || currentEmp.DOJ || '2021-03-15'}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Bank Account Details Card */}
+      <View style={styles.detailsCard}>
+        <Text style={styles.cardHeader}>🏦 Bank Account & Payroll Details</Text>
+
+        <View style={styles.row}>
+          <Building size={18} color={COLORS.primary} />
+          <View style={styles.rowContent}>
+            <Text style={styles.rowLabel}>Bank Name</Text>
+            <Text style={styles.rowValue}>{currentEmp.bankName || currentEmp.BankName || 'HDFC Bank Ltd'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <User size={18} color={COLORS.primary} />
+          <View style={styles.rowContent}>
+            <Text style={styles.rowLabel}>Account Holder Name</Text>
+            <Text style={styles.rowValue}>{currentEmp.accountHolderName || currentEmp.AccountHolderName || currentEmp.name || currentEmp.FullName}</Text>
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <CreditCard size={18} color={COLORS.primary} />
+          <View style={styles.rowContent}>
+            <Text style={styles.rowLabel}>Bank Account Number</Text>
+            <Text style={styles.rowValue}>{currentEmp.accountNo || currentEmp.AccountNo || '50100298765432'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <Shield size={18} color={COLORS.primary} />
+          <View style={styles.rowContent}>
+            <Text style={styles.rowLabel}>IFSC Code</Text>
+            <Text style={styles.rowValue}>{currentEmp.ifscCode || currentEmp.IFSCCode || 'HDFC0001234'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <Landmark size={18} color={COLORS.primary} />
+          <View style={styles.rowContent}>
+            <Text style={styles.rowLabel}>Branch Name</Text>
+            <Text style={styles.rowValue}>{currentEmp.branchName || currentEmp.BranchName || 'Main HQ Branch'}</Text>
           </View>
         </View>
       </View>
@@ -280,11 +362,61 @@ export const EmployeeDetailScreen = ({ route, navigation }) => {
               />
 
               <CustomInput
-                label="Monthly Pay Amount (₹ INR)"
+                label="Monthly Pay Amount"
                 value={editSalary}
                 onChangeText={setEditSalary}
                 icon={IndianRupee}
                 keyboardType="numeric"
+              />
+
+              <DatePickerInput
+                label="Date of Birth"
+                value={editDob}
+                onChangeText={setEditDob}
+              />
+
+              <DatePickerInput
+                label="Date of Joining"
+                value={editDoj}
+                onChangeText={setEditDoj}
+              />
+
+              <Text style={styles.sectionLabel}>🏦 Bank Account Information</Text>
+
+              <CustomInput
+                label="Bank Name"
+                value={editBankName}
+                onChangeText={setEditBankName}
+                icon={Building}
+              />
+
+              <CustomInput
+                label="Account Holder Name"
+                value={editAccountHolderName}
+                onChangeText={setEditAccountHolderName}
+                icon={User}
+              />
+
+              <CustomInput
+                label="Bank Account Number"
+                value={editAccountNo}
+                onChangeText={setEditAccountNo}
+                icon={CreditCard}
+                keyboardType="numeric"
+              />
+
+              <CustomInput
+                label="IFSC Code"
+                value={editIfscCode}
+                onChangeText={setEditIfscCode}
+                icon={Shield}
+              />
+
+              <CustomInput
+                label="Branch Name"
+                value={editBranchName}
+                onChangeText={setEditBranchName}
+                icon={Landmark}
               />
 
               <Text style={styles.sectionLabel}>Department</Text>

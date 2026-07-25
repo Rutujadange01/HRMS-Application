@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { CustomInput } from '../../components/CustomInput';
 import { PrimaryButton } from '../../components/PrimaryButton';
@@ -30,10 +30,11 @@ export const LoginScreen = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <View style={styles.badgeIcon}>
-          <ShieldCheck size={36} color={COLORS.primary} />
-        </View>
-        <Text style={styles.title}>Techno HRMS</Text>
+        <Image 
+          source={require('../../assets/logo.png')} 
+          style={styles.logoImg} 
+          resizeMode="contain" 
+        />
         <Text style={styles.subtitle}>Enterprise Workforce & Talent Platform</Text>
       </View>
 
@@ -120,18 +121,12 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
-  badgeIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: COLORS.activeTabBg,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+  logoImg: {
+    width: 240,
+    height: 75,
+    marginBottom: 6,
   },
   title: {
     fontSize: 28,

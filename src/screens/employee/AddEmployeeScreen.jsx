@@ -4,9 +4,10 @@ import { HRMSContext } from '../../context/HRMSContext';
 import { AuthContext } from '../../context/AuthContext';
 import { employeeService } from '../../services/employeeService';
 import { CustomInput } from '../../components/CustomInput';
+import { DatePickerInput } from '../../components/DatePickerInput';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { COLORS } from '../../constants/theme';
-import { User, Mail, Phone, Briefcase, IndianRupee, ArrowLeft, UserCheck, CreditCard, Shield, Camera, Image as ImageIcon, Sparkles, Check, RefreshCw, X, ScanFace, ShieldCheck, CheckCircle2, Lock } from 'lucide-react-native';
+import { User, Mail, Phone, Briefcase, IndianRupee, ArrowLeft, UserCheck, CreditCard, Shield, Camera, Image as ImageIcon, Sparkles, Check, RefreshCw, X, ScanFace, ShieldCheck, CheckCircle2, Lock, Calendar, Building, Landmark } from 'lucide-react-native';
 
 const AVATAR_PRESETS = [
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
@@ -58,7 +59,13 @@ export const AddEmployeeScreen = ({ navigation }) => {
   const [panNo, setPanNo] = useState('');
   const [uanNo, setUanNo] = useState('');
   const [monthlyPayAmt, setMonthlyPayAmt] = useState('45000');
+  const [dob, setDob] = useState('1998-05-20');
   const [doj, setDoj] = useState(new Date().toISOString().split('T')[0]);
+  const [bankName, setBankName] = useState('HDFC Bank Ltd');
+  const [accountNo, setAccountNo] = useState('');
+  const [ifscCode, setIfscCode] = useState('HDFC0001234');
+  const [branchName, setBranchName] = useState('Main HQ Branch');
+  const [accountHolderName, setAccountHolderName] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(AVATAR_PRESETS[0]);
   const [loading, setLoading] = useState(false);
 
@@ -139,6 +146,8 @@ export const AddEmployeeScreen = ({ navigation }) => {
         name: fullName,
         Email: email,
         email: email,
+        DOB: dob,
+        dob: dob,
         DOJ: doj,
         joiningDate: doj,
         DepartmentID: 'dept_01',
@@ -148,6 +157,16 @@ export const AddEmployeeScreen = ({ navigation }) => {
         AdharNo: adharNo,
         PanNo: panNo,
         UANNo: uanNo,
+        BankName: bankName || 'HDFC Bank Ltd',
+        bankName: bankName || 'HDFC Bank Ltd',
+        AccountNo: accountNo || '50100298765432',
+        accountNo: accountNo || '50100298765432',
+        IFSCCode: ifscCode || 'HDFC0001234',
+        ifscCode: ifscCode || 'HDFC0001234',
+        BranchName: branchName || 'Main HQ Branch',
+        branchName: branchName || 'Main HQ Branch',
+        AccountHolderName: accountHolderName || fullName || 'Employee Account',
+        accountHolderName: accountHolderName || fullName || 'Employee Account',
         Designation: designation,
         designation: designation,
         InTime: '09:00 AM',
@@ -267,7 +286,7 @@ export const AddEmployeeScreen = ({ navigation }) => {
         />
 
         <CustomInput
-          label="Password (PasswordHash)"
+          label="Password"
           placeholder="Type employee password..."
           value={passwordHash}
           onChangeText={setPasswordHash}
@@ -289,6 +308,20 @@ export const AddEmployeeScreen = ({ navigation }) => {
           value={designation}
           onChangeText={setDesignation}
           icon={Briefcase}
+        />
+
+        <DatePickerInput
+          label="Date of Birth"
+          placeholder="YYYY-MM-DD (e.g. 1995-08-15)"
+          value={dob}
+          onChangeText={setDob}
+        />
+
+        <DatePickerInput
+          label="Date of Joining"
+          placeholder="YYYY-MM-DD (e.g. 2024-01-15)"
+          value={doj}
+          onChangeText={setDoj}
         />
 
         <Text style={styles.sectionLabel}>Gender</Text>
@@ -345,7 +378,50 @@ export const AddEmployeeScreen = ({ navigation }) => {
           keyboardType="numeric"
         />
 
-        <Text style={styles.sectionHeader}>3. Department, Access Role & Pay</Text>
+        <Text style={styles.sectionHeader}>3. Bank Account & Payroll Details</Text>
+
+        <CustomInput
+          label="Bank Name"
+          placeholder="e.g. HDFC Bank Ltd"
+          value={bankName}
+          onChangeText={setBankName}
+          icon={Building}
+        />
+
+        <CustomInput
+          label="Account Holder Name"
+          placeholder="e.g. Rachel Green"
+          value={accountHolderName}
+          onChangeText={setAccountHolderName}
+          icon={User}
+        />
+
+        <CustomInput
+          label="Bank Account Number"
+          placeholder="50100298765432"
+          value={accountNo}
+          onChangeText={setAccountNo}
+          icon={CreditCard}
+          keyboardType="numeric"
+        />
+
+        <CustomInput
+          label="IFSC Code"
+          placeholder="HDFC0001234"
+          value={ifscCode}
+          onChangeText={setIfscCode}
+          icon={Shield}
+        />
+
+        <CustomInput
+          label="Branch Name"
+          placeholder="e.g. Main HQ Branch, Mumbai"
+          value={branchName}
+          onChangeText={setBranchName}
+          icon={Landmark}
+        />
+
+        <Text style={styles.sectionHeader}>4. Department, Access Role & Pay</Text>
 
         <Text style={styles.sectionLabel}>Assigned Department</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
@@ -378,7 +454,7 @@ export const AddEmployeeScreen = ({ navigation }) => {
         </View>
 
         <CustomInput
-          label="Monthly Pay Amount (₹ INR)"
+          label="Monthly Pay Amount"
           placeholder="45000"
           value={monthlyPayAmt}
           onChangeText={setMonthlyPayAmt}

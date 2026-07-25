@@ -82,7 +82,7 @@ export const ClockInScreen = ({ navigation }) => {
         </View>
 
         <CustomInput
-          label="Check-in Note (Optional)"
+          label="Check-in Note"
           placeholder="e.g. Working on Q3 mobile release"
           value={notes}
           onChangeText={setNotes}

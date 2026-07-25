@@ -444,6 +444,8 @@ export const DailyAttendanceScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
+
+
           {/* Calendar Card Grid */}
           <View style={styles.calendarCard}>
             {/* Weekday Header Row */}
@@ -536,6 +538,53 @@ export const DailyAttendanceScreen = ({ navigation }) => {
                 </View>
               </View>
             )}
+          </View>
+
+          {/* Attendance Correction & Miss Punch Shortcuts (Placed Below Monthly Overview) */}
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 4, marginBottom: 12 }}>
+            <TouchableOpacity 
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                backgroundColor: COLORS.activeTabBg,
+                borderRadius: 12,
+                paddingVertical: 12,
+                paddingHorizontal: 10,
+                borderWidth: 1,
+                borderColor: COLORS.primary
+              }}
+              onPress={() => navigation.navigate('MissPunchRequest')}
+            >
+              <Clock size={16} color={COLORS.primary} />
+              <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.primary }}>
+                Miss Punch Request
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                backgroundColor: 'rgba(253, 172, 100, 0.15)',
+                borderRadius: 12,
+                paddingVertical: 12,
+                paddingHorizontal: 10,
+                borderWidth: 1,
+                borderColor: COLORS.secondary
+              }}
+              onPress={() => navigation.navigate('AttendanceCorrection')}
+            >
+              <Clock size={16} color={COLORS.secondary} />
+              <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.secondary }}>
+                Attendance Correction
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -823,7 +872,7 @@ const styles = StyleSheet.create({
   },
   weekdayRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    width: '100%',
     paddingVertical: 8,
     marginBottom: 8,
     borderBottomWidth: 1,
@@ -833,21 +882,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: COLORS.textSecondary,
-    width: 38,
+    width: '14.28%',
     textAlign: 'center',
   },
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    width: '100%',
   },
   dayCell: {
-    width: 38,
-    height: 46,
+    width: '14.28%',
+    height: 44,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 3,
+    marginVertical: 2,
   },
   paddedDayCell: {
     backgroundColor: 'transparent',

@@ -6,8 +6,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import { AuthContext } from '../context/AuthContext';
 import { CustomDrawerOverlay } from '../components/CustomDrawerOverlay';
+import { FacePunchModal } from '../components/FacePunchModal';
 import { COLORS } from '../constants/theme';
-import { Menu, Wand2, LayoutDashboard, Users, Clock, IndianRupee, UserCheck, Calendar } from 'lucide-react-native';
+import { Menu, Wand2, LayoutDashboard, Users, Clock, IndianRupee, UserCheck, Calendar, Camera } from 'lucide-react-native';
 
 // Auth Screens
 import { LoginScreen } from '../screens/auth/LoginScreen';
@@ -22,7 +23,11 @@ import { DailyAttendanceScreen } from '../screens/attendance/DailyAttendanceScre
 import { PayrollSetupWizardScreen } from '../screens/payroll/PayrollSetupWizardScreen';
 import { ProcessPayrollScreen } from '../screens/payroll/ProcessPayrollScreen';
 import { LeaveManagementScreen } from '../screens/attendance/LeaveManagementScreen';
+import { MissPunchScreen } from '../screens/attendance/MissPunchScreen';
+import { AttendanceCorrectionScreen } from '../screens/attendance/AttendanceCorrectionScreen';
+import { BulkAttendanceScreen } from '../screens/attendance/BulkAttendanceScreen';
 import { AdvanceLoanScreen } from '../screens/advance/AdvanceLoanScreen';
+import { ExpenseClaimScreen } from '../screens/expense/ExpenseClaimScreen';
 import { AssetManagementScreen } from '../screens/assets/AssetManagementScreen';
 import { EssDashboardScreen } from '../screens/ess/EssDashboardScreen';
 import { ReportsScreen } from '../screens/reports/ReportsScreen';
@@ -46,45 +51,58 @@ const CustomHeader = ({ title, navigation, onOpenDrawer }) => (
   </SafeAreaView>
 );
 
-// Persistent Bottom Navigation Bar Filtered by Role Authorization with Center Floating Menu
-// Persistent Bottom Navigation Bar Filtered by Role Authorization
-const PersistentBottomBar = ({ activeRoute, onNavigate }) => {
-  const { profile } = useContext(AuthContext);
-  const role = profile?.role || 'Admin';
-
-  const allTabs = [
-    { label: 'Dashboard', route: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'HR', 'Manager', 'Employee'] },
-    { label: 'Employees', route: 'EmployeeList', icon: Users, roles: ['Admin', 'HR', 'Manager'] },
-    { label: 'Attendance', route: 'DailyAttendance', icon: Clock, roles: ['Admin', 'HR', 'Manager', 'Employee'] },
-    { label: 'Payroll', route: 'ProcessPayroll', icon: IndianRupee, roles: ['Admin', 'HR'] },
-    { label: 'ESS Portal', route: 'EssDashboard', icon: UserCheck, roles: ['Employee'] },
-    { label: 'Leaves', route: 'LeaveManagement', icon: Calendar, roles: ['Manager', 'Employee'] },
-  ];
-
-  // Filter tabs for current user role (max 4 tabs)
-  const tabs = allTabs.filter(t => t.roles.includes(role)).slice(0, 4);
-
+// Persistent Bottom Navigation Bar with Center Punch (Face Detection) Action
+const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal }) => {
   return (
     <SafeAreaView style={styles.bottomBarSafeArea}>
       <View style={styles.bottomBarContainer}>
-        {tabs.map((tab) => {
-          const IconComponent = tab.icon;
-          const isFocused = activeRoute === tab.route;
+        {/* Dashboard Tab */}
+        <TouchableOpacity
+          style={[styles.tabItem, activeRoute === 'Dashboard' && styles.tabItemActive]}
+          onPress={() => onNavigate('Dashboard')}
+          activeOpacity={0.7}
+        >
+          <LayoutDashboard size={20} color={activeRoute === 'Dashboard' ? COLORS.primary : COLORS.textSecondary} />
+          <Text style={[styles.tabLabel, activeRoute === 'Dashboard' && styles.tabLabelActive]}>
+            Dashboard
+          </Text>
+        </TouchableOpacity>
 
-          return (
-            <TouchableOpacity
-              key={tab.route}
-              style={[styles.tabItem, isFocused && styles.tabItemActive]}
-              onPress={() => onNavigate(tab.route)}
-              activeOpacity={0.7}
-            >
-              <IconComponent size={20} color={isFocused ? COLORS.primary : COLORS.textSecondary} />
-              <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {/* Center Punch FAB (Opens Face Verification Camera Modal) */}
+        <TouchableOpacity
+          style={styles.centerMenuFab}
+          onPress={onOpenPunchModal}
+          activeOpacity={0.85}
+        >
+          <View style={styles.centerMenuCircle}>
+            <Camera size={24} color="#ffffff" />
+          </View>
+          <Text style={styles.centerMenuLabel}>Punch</Text>
+        </TouchableOpacity>
+
+        {/* Punch History Tab */}
+        <TouchableOpacity
+          style={[styles.tabItem, activeRoute === 'DailyAttendance' && styles.tabItemActive]}
+          onPress={() => onNavigate('DailyAttendance')}
+          activeOpacity={0.7}
+        >
+          <Clock size={20} color={activeRoute === 'DailyAttendance' ? COLORS.primary : COLORS.textSecondary} />
+          <Text style={[styles.tabLabel, activeRoute === 'DailyAttendance' && styles.tabLabelActive]}>
+            Punch History
+          </Text>
+        </TouchableOpacity>
+
+        {/* ESS Portal Tab */}
+        <TouchableOpacity
+          style={[styles.tabItem, activeRoute === 'EssDashboard' && styles.tabItemActive]}
+          onPress={() => onNavigate('EssDashboard')}
+          activeOpacity={0.7}
+        >
+          <UserCheck size={20} color={activeRoute === 'EssDashboard' ? COLORS.primary : COLORS.textSecondary} />
+          <Text style={[styles.tabLabel, activeRoute === 'EssDashboard' && styles.tabLabelActive]}>
+            ESS Portal
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -93,6 +111,7 @@ const PersistentBottomBar = ({ activeRoute, onNavigate }) => {
 // Main Navigation Shell
 const MainAppFlowScreen = ({ navigation }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [faceModalOpen, setFaceModalOpen] = useState(false);
   const [currentRoute, setCurrentRoute] = useState('Dashboard');
 
   const handleNavigate = (routeName) => {
@@ -111,11 +130,15 @@ const MainAppFlowScreen = ({ navigation }) => {
                 route.name === 'EmployeeList' ? 'Employees Directory' :
                 route.name === 'EmployeeDetail' ? 'Employee Profile' :
                 route.name === 'AddEmployee' ? 'Onboard Employee' :
-                route.name === 'DailyAttendance' ? 'Attendance & Geo/QR' :
+                route.name === 'DailyAttendance' ? 'Punch History' :
                 route.name === 'PayrollWizard' ? 'Payroll Setup Wizard' :
                 route.name === 'ProcessPayroll' ? 'Payroll & Payslips' :
                 route.name === 'LeaveManagement' ? 'Leave Approvals' :
+                route.name === 'MissPunchRequest' ? 'Miss Punch Requests' :
+                route.name === 'AttendanceCorrection' ? 'Attendance Correction' :
+                route.name === 'BulkAttendance' ? 'Bulk Mark Attendance' :
                 route.name === 'AdvanceLoan' ? 'Advance & Loans' :
+                route.name === 'ExpenseClaim' ? 'Expense Claims' :
                 route.name === 'AssetManagement' ? 'Asset Management' :
                 route.name === 'EssDashboard' ? 'Employee Self Service' :
                 route.name === 'Reports' ? 'Reports & Exports' :
@@ -136,7 +159,11 @@ const MainAppFlowScreen = ({ navigation }) => {
         <Stack.Screen name="PayrollWizard" component={PayrollSetupWizardScreen} />
         <Stack.Screen name="ProcessPayroll" component={ProcessPayrollScreen} />
         <Stack.Screen name="LeaveManagement" component={LeaveManagementScreen} />
+        <Stack.Screen name="MissPunchRequest" component={MissPunchScreen} />
+        <Stack.Screen name="AttendanceCorrection" component={AttendanceCorrectionScreen} />
+        <Stack.Screen name="BulkAttendance" component={BulkAttendanceScreen} />
         <Stack.Screen name="AdvanceLoan" component={AdvanceLoanScreen} />
+        <Stack.Screen name="ExpenseClaim" component={ExpenseClaimScreen} />
         <Stack.Screen name="AssetManagement" component={AssetManagementScreen} />
         <Stack.Screen name="EssDashboard" component={EssDashboardScreen} />
         <Stack.Screen name="Reports" component={ReportsScreen} />
@@ -144,11 +171,17 @@ const MainAppFlowScreen = ({ navigation }) => {
         <Stack.Screen name="CompanyProfile" component={CompanyProfileScreen} />
       </Stack.Navigator>
 
-      {/* Persistent Bottom Bar (Role Filtered) with Center Floating Menu */}
+      {/* Persistent Bottom Bar with Center Punch (Face Detection) FAB */}
       <PersistentBottomBar
         activeRoute={currentRoute}
         onNavigate={handleNavigate}
-        onOpenDrawer={() => setDrawerOpen(true)}
+        onOpenPunchModal={() => setFaceModalOpen(true)}
+      />
+
+      {/* Face Recognition Punch Modal */}
+      <FacePunchModal
+        visible={faceModalOpen}
+        onClose={() => setFaceModalOpen(false)}
       />
 
       {/* Left Drawer Overlay (Role Filtered) */}
