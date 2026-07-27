@@ -1,14 +1,14 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import { AuthContext } from '../context/AuthContext';
-import { CustomDrawerOverlay } from '../components/CustomDrawerOverlay';
 import { FacePunchModal } from '../components/FacePunchModal';
+import { MoreServicesModal } from '../components/MoreServicesModal';
 import { COLORS } from '../constants/theme';
-import { Menu, Wand2, LayoutDashboard, Users, Clock, IndianRupee, UserCheck, Calendar, Camera } from 'lucide-react-native';
+import { Wand2, LayoutDashboard, Clock, UserCheck, Camera, Grid, MoreHorizontal } from 'lucide-react-native';
 
 // Auth Screens
 import { LoginScreen } from '../screens/auth/LoginScreen';
@@ -37,13 +37,15 @@ import { CompanyProfileScreen } from '../screens/company/CompanyProfileScreen';
 const Stack = createStackNavigator();
 
 // Custom Top Header Component
-const CustomHeader = ({ title, navigation, onOpenDrawer }) => (
+const CustomHeader = ({ title, navigation }) => (
   <SafeAreaView style={styles.headerSafeArea} edges={['top']}>
     <View style={styles.headerContainer}>
-      <TouchableOpacity style={styles.menuBtn} onPress={onOpenDrawer}>
-        <Menu size={22} color={COLORS.primary} />
-      </TouchableOpacity>
-      <Text style={styles.headerTitle}>{title}</Text>
+      <View style={styles.headerTitleContainer}>
+        <View style={styles.logoBadge}>
+          <Text style={styles.logoBadgeText}>TH</Text>
+        </View>
+        <Text style={styles.headerTitle}>{title}</Text>
+      </View>
       <TouchableOpacity style={styles.wizardBtn} onPress={() => navigation.navigate('PayrollWizard')}>
         <Wand2 size={18} color={COLORS.primary} />
       </TouchableOpacity>
@@ -52,7 +54,7 @@ const CustomHeader = ({ title, navigation, onOpenDrawer }) => (
 );
 
 // Persistent Bottom Navigation Bar with Center Punch (Face Detection) Action
-const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal }) => {
+const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal, onOpenMoreModal }) => {
   return (
     <SafeAreaView style={styles.bottomBarSafeArea}>
       <View style={styles.bottomBarContainer}>
@@ -68,6 +70,18 @@ const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal }) => {
           </Text>
         </TouchableOpacity>
 
+        {/* Punch History Tab */}
+        <TouchableOpacity
+          style={[styles.tabItem, activeRoute === 'DailyAttendance' && styles.tabItemActive]}
+          onPress={() => onNavigate('DailyAttendance')}
+          activeOpacity={0.7}
+        >
+          <Clock size={20} color={activeRoute === 'DailyAttendance' ? COLORS.primary : COLORS.textSecondary} />
+          <Text style={[styles.tabLabel, activeRoute === 'DailyAttendance' && styles.tabLabelActive]}>
+            History
+          </Text>
+        </TouchableOpacity>
+
         {/* Center Punch FAB (Opens Face Verification Camera Modal) */}
         <TouchableOpacity
           style={styles.centerMenuFab}
@@ -78,18 +92,6 @@ const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal }) => {
             <Camera size={24} color="#ffffff" />
           </View>
           <Text style={styles.centerMenuLabel}>Punch</Text>
-        </TouchableOpacity>
-
-        {/* Punch History Tab */}
-        <TouchableOpacity
-          style={[styles.tabItem, activeRoute === 'DailyAttendance' && styles.tabItemActive]}
-          onPress={() => onNavigate('DailyAttendance')}
-          activeOpacity={0.7}
-        >
-          <Clock size={20} color={activeRoute === 'DailyAttendance' ? COLORS.primary : COLORS.textSecondary} />
-          <Text style={[styles.tabLabel, activeRoute === 'DailyAttendance' && styles.tabLabelActive]}>
-            Punch History
-          </Text>
         </TouchableOpacity>
 
         {/* ESS Portal Tab */}
@@ -103,6 +105,18 @@ const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal }) => {
             ESS Portal
           </Text>
         </TouchableOpacity>
+
+        {/* ... More Services Grid Modal Tab */}
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={onOpenMoreModal}
+          activeOpacity={0.7}
+        >
+          <Grid size={20} color={COLORS.primary} />
+          <Text style={[styles.tabLabel, { color: COLORS.primary, fontWeight: '700' }]}>
+            ... More
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -110,7 +124,7 @@ const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal }) => {
 
 // Main Navigation Shell
 const MainAppFlowScreen = ({ navigation }) => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [moreServicesOpen, setMoreServicesOpen] = useState(false);
   const [faceModalOpen, setFaceModalOpen] = useState(false);
   const [currentRoute, setCurrentRoute] = useState('Dashboard');
 
@@ -146,7 +160,6 @@ const MainAppFlowScreen = ({ navigation }) => {
                 route.name === 'CompanyProfile' ? 'Company Setup' : 'Techno HRMS'
               }
               navigation={navigation}
-              onOpenDrawer={() => setDrawerOpen(true)}
             />
           ),
         })}
@@ -171,11 +184,12 @@ const MainAppFlowScreen = ({ navigation }) => {
         <Stack.Screen name="CompanyProfile" component={CompanyProfileScreen} />
       </Stack.Navigator>
 
-      {/* Persistent Bottom Bar with Center Punch (Face Detection) FAB */}
+      {/* Persistent Bottom Bar with Center Punch (Face Detection) FAB & ... More Tab */}
       <PersistentBottomBar
         activeRoute={currentRoute}
         onNavigate={handleNavigate}
         onOpenPunchModal={() => setFaceModalOpen(true)}
+        onOpenMoreModal={() => setMoreServicesOpen(true)}
       />
 
       {/* Face Recognition Punch Modal */}
@@ -184,12 +198,12 @@ const MainAppFlowScreen = ({ navigation }) => {
         onClose={() => setFaceModalOpen(false)}
       />
 
-      {/* Left Drawer Overlay (Role Filtered) */}
-      <CustomDrawerOverlay
-        visible={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+      {/* ... More Services Full-Screen Grid Box Modal */}
+      <MoreServicesModal
+        visible={moreServicesOpen}
+        onClose={() => setMoreServicesOpen(false)}
         navigation={navigation}
-        currentRoute={currentRoute}
+        onNavigate={handleNavigate}
       />
     </View>
   );
@@ -227,10 +241,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
   },
-  menuBtn: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: COLORS.inputBg,
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '900',
   },
   headerTitle: {
     fontSize: 17,
@@ -252,7 +279,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
   },
   tabItem: {
     flex: 1,
@@ -265,7 +292,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.activeTabBg,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: COLORS.textSecondary,
     marginTop: 3,
@@ -278,7 +305,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -16,
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
   },
   centerMenuCircle: {
     width: 48,
