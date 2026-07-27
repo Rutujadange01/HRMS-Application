@@ -50,13 +50,26 @@ export const EmployeeDashboardScreen = ({ navigation }) => {
     );
   };
 
+  const currentEmpRecord = React.useMemo(() => {
+    if (!employees || employees.length === 0) return null;
+    return employees.find(e => {
+      const eUid = (e.id || e.UserID || e.UserCode || '').trim().toLowerCase();
+      const eEmail = (e.Email || e.email || '').trim().toLowerCase();
+      const eName = (e.FullName || e.name || e.Username || '').trim().toLowerCase();
+      return (profUid && eUid === profUid) || (profEmail && eEmail === profEmail) || (profName && eName === profName);
+    });
+  }, [employees, profUid, profEmail, profName]);
+
+  const userNameStr = profile?.name || profile?.FullName || currentEmpRecord?.FullName || currentEmpRecord?.name || 'Employee';
+  const userPhotoUri = profile?.UPhoto || currentEmpRecord?.UPhoto || profile?.avatar || currentEmpRecord?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userNameStr)}&background=F15E8C&color=fff`;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Top Header Profile Banner */}
       <View style={styles.topHeader}>
         <View style={styles.profileSection}>
           <Image
-            source={{ uri: profile?.avatar || profile?.UPhoto || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' }}
+            source={{ uri: userPhotoUri }}
             style={styles.avatar}
           />
           <View>
@@ -68,7 +81,7 @@ export const EmployeeDashboardScreen = ({ navigation }) => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.7} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
           <LogOut size={18} color={COLORS.danger} />
         </TouchableOpacity>
       </View>
@@ -267,11 +280,13 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   logoutBtn: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    justify: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   clockCard: {

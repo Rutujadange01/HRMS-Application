@@ -51,13 +51,14 @@ export const employeeService = {
       IsActive: true,
       joiningDate: new Date().toISOString().split('T')[0],
       CreatedOn: new Date().toISOString(),
-      avatar: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150`,
+      avatar: employeeData.UPhoto || employeeData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(employeeData.FullName || employeeData.name || 'User')}&background=F15E8C&color=fff`,
+      UPhoto: employeeData.UPhoto || null,
       ...employeeData
     };
 
     try {
       if (db) {
-        await setDoc(doc(db, 'employees', empId), payload);
+        await setDoc(doc(db, 'employees', empId), payload, { merge: true });
       }
     } catch (error) {
       console.warn("Add employee error:", error.message);
@@ -70,8 +71,15 @@ export const employeeService = {
   updateEmployee: async (id, updatedFields) => {
     try {
       if (db && id) {
-        const ref = doc(db, 'employees', id);
-        await updateDoc(ref, updatedFields);
+        const empRef = doc(db, 'employees', id);
+        await setDoc(empRef, updatedFields, { merge: true });
+
+        try {
+          const userRef = doc(db, 'users', id);
+          await setDoc(userRef, updatedFields, { merge: true });
+        } catch (e) {
+          // ignore error if user doc does not exist
+        }
       }
     } catch (error) {
       console.warn("Update employee error:", error.message);

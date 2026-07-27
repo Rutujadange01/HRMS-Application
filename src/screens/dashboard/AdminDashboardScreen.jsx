@@ -84,7 +84,7 @@ export const AdminDashboardScreen = ({ navigation }) => {
       <View style={styles.topHeader}>
         <View style={styles.profileSection}>
           <Image
-            source={{ uri: profile?.avatar || profile?.UPhoto || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' }}
+            source={{ uri: profile?.UPhoto || profile?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'Admin')}&background=F15E8C&color=fff` }}
             style={styles.avatar}
           />
           <View>
@@ -96,7 +96,7 @@ export const AdminDashboardScreen = ({ navigation }) => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.7} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
           <LogOut size={18} color={COLORS.danger} />
         </TouchableOpacity>
       </View>
@@ -289,11 +289,13 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   logoutBtn: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    justify: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   clockCard: {

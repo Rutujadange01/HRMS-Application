@@ -5,28 +5,38 @@ import { COLORS } from '../constants/theme';
 import { Mail, Phone, ChevronRight } from 'lucide-react-native';
 
 export const EmployeeCard = ({ employee, onPress }) => {
+  if (!employee) return null;
+
+  const empName = employee.FullName || employee.name || employee.Username || 'Staff Member';
+  const empPhoto = employee.UPhoto || employee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(empName)}&background=F15E8C&color=fff`;
+  const empStatus = employee.Status || employee.status || 'Active';
+  const empDesig = employee.Designation || employee.designation || 'Staff Member';
+  const empDept = employee.Department || employee.department || employee.DepartmentID || 'General';
+  const empEmail = employee.Email || employee.email || '--';
+  const empPhone = employee.MobileNo || employee.phone || '--';
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <Image
-        source={{ uri: employee.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' }}
+        source={{ uri: empPhoto }}
         style={styles.avatar}
       />
       <View style={styles.infoContainer}>
         <View style={styles.topRow}>
-          <Text style={styles.name}>{employee.name}</Text>
-          <AttendanceBadge status={employee.status} />
+          <Text style={styles.name} numberOfLines={1}>{empName}</Text>
+          <AttendanceBadge status={empStatus} />
         </View>
-        <Text style={styles.designation}>{employee.designation}</Text>
-        <Text style={styles.department}>{employee.department}</Text>
+        <Text style={styles.designation} numberOfLines={1}>{empDesig}</Text>
+        <Text style={styles.department} numberOfLines={1}>{empDept}</Text>
         
         <View style={styles.contactRow}>
           <View style={styles.contactItem}>
             <Mail size={12} color={COLORS.textSecondary} />
-            <Text style={styles.contactText} numberOfLines={1}>{employee.email}</Text>
+            <Text style={styles.contactText} numberOfLines={1}>{empEmail}</Text>
           </View>
           <View style={styles.contactItem}>
             <Phone size={12} color={COLORS.textSecondary} />
-            <Text style={styles.contactText}>{employee.phone}</Text>
+            <Text style={styles.contactText} numberOfLines={1}>{empPhone}</Text>
           </View>
         </View>
       </View>
@@ -58,7 +68,7 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 27,
     backgroundColor: COLORS.inputBg,
-    marginRight: 14,
+    marginRight: 12,
   },
   infoContainer: {
     flex: 1,
@@ -70,36 +80,38 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   name: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: COLORS.textPrimary,
+    flex: 1,
+    marginRight: 8,
   },
   designation: {
     fontSize: 13,
-    color: COLORS.primary,
     fontWeight: '600',
-    marginBottom: 2,
+    color: COLORS.primary,
+    marginBottom: 1,
   },
   department: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
   contactRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
   },
   contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    flexShrink: 1,
   },
   contactText: {
     fontSize: 11,
     color: COLORS.textSecondary,
   },
   arrowContainer: {
-    paddingLeft: 8,
+    marginLeft: 8,
   },
 });

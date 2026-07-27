@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
 import { HRMSContext } from '../../context/HRMSContext';
 import { AuthContext } from '../../context/AuthContext';
 import { employeeService } from '../../services/employeeService';
@@ -75,6 +75,37 @@ export const AddEmployeeScreen = ({ navigation }) => {
   const [capturing, setCapturing] = useState(false);
   const [scanStep, setScanStep] = useState('Align Face in Target Frame...');
   const [capturedPhoto, setCapturedPhoto] = useState(null);
+
+  const [hasCameraStream, setHasCameraStream] = useState(false);
+  const streamRef = React.useRef(null);
+
+  useEffect(() => {
+    if (cameraModalVisible) {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator?.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+          .then((stream) => {
+            streamRef.current = stream;
+            setHasCameraStream(true);
+          })
+          .catch((err) => {
+            console.log("Webcam access denied or unavailable:", err);
+            setHasCameraStream(false);
+          });
+      }
+    } else {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      setHasCameraStream(false);
+    }
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, [cameraModalVisible]);
 
   const openCameraModal = (faceAi = true) => {
     setIsFaceMode(faceAi);
@@ -488,6 +519,25 @@ export const AddEmployeeScreen = ({ navigation }) => {
             <View style={styles.cameraPreviewFrame}>
               {capturedPhoto ? (
                 <Image source={{ uri: capturedPhoto }} style={styles.cameraCapturedImg} />
+              ) : Platform.OS === 'web' && hasCameraStream ? (
+                <video
+                  ref={(node) => {
+                    if (node && streamRef.current && node.srcObject !== streamRef.current) {
+                      node.srcObject = streamRef.current;
+                      node.play().catch(() => {});
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: 16,
+                    transform: 'scaleX(-1)',
+                  }}
+                />
               ) : (
                 <View style={styles.viewfinderBox}>
                   {/* Face Mesh Viewfinder Circle */}

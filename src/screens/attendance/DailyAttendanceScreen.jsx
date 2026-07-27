@@ -1,8 +1,9 @@
 import React, { useContext, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
 import { HRMSContext } from '../../context/HRMSContext';
 import { AuthContext } from '../../context/AuthContext';
 import { AttendanceBadge } from '../../components/AttendanceBadge';
+import { verifyFaceBiometric, findBestFaceMatch } from '../../utils/faceMatcher';
 import { COLORS } from '../../constants/theme';
 import { Clock, MapPin, QrCode, Camera, ScanFace, Sparkles, ShieldCheck, CheckCircle2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, PieChart, ArrowLeft } from 'lucide-react-native';
 
@@ -86,6 +87,58 @@ export const DailyAttendanceScreen = ({ navigation }) => {
   const [scanStep, setScanStep] = useState('Detecting Face...');
   const [matchScore, setMatchScore] = useState(null);
   const [verified, setVerified] = useState(false);
+  const [activeMatchedEmp, setActiveMatchedEmp] = useState(null);
+
+  const [hasCameraStream, setHasCameraStream] = useState(false);
+  const streamRef = React.useRef(null);
+  const videoRef = React.useRef(null);
+
+  const getLiveCameraFrame = () => {
+    try {
+      if (Platform.OS === 'web' && videoRef.current && videoRef.current.videoWidth > 0) {
+        const video = videoRef.current;
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 360;
+        canvas.height = video.videoHeight || 360;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.90);
+      }
+    } catch (e) {
+      console.warn("Live camera frame capture failed:", e);
+    }
+    return null;
+  };
+
+  React.useEffect(() => {
+    if (modalVisible && (modalType === 'face' || modalType === 'selfie')) {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator?.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+          .then((stream) => {
+            streamRef.current = stream;
+            setHasCameraStream(true);
+          })
+          .catch((err) => {
+            console.log("Webcam access denied or unavailable:", err);
+            setHasCameraStream(false);
+          });
+      }
+    } else {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      setHasCameraStream(false);
+    }
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, [modalVisible, modalType]);
 
   // Calendar State with Dynamic Month Navigation
   const today = new Date();
@@ -113,32 +166,56 @@ export const DailyAttendanceScreen = ({ navigation }) => {
     }
   };
 
+  // Resolve matching employee record for current logged-in user
+  const currentEmpRecord = useMemo(() => {
+    if (!employees || employees.length === 0) return null;
+    const profUid = (profile?.uid || profile?.UserID || profile?.id || '').trim().toLowerCase();
+    const profEmail = (profile?.email || profile?.Email || '').trim().toLowerCase();
+    const profName = (profile?.name || profile?.FullName || '').trim().toLowerCase();
+
+    return employees.find(e => {
+      const eUid = (e.id || e.UserID || '').trim().toLowerCase();
+      const eEmail = (e.Email || e.email || '').trim().toLowerCase();
+      const eName = (e.FullName || e.name || '').trim().toLowerCase();
+      return (profUid && eUid === profUid) || (profEmail && eEmail === profEmail) || (profName && eName === profName);
+    });
+  }, [employees, profile]);
+
   const officeDistance = 45; // 45 meters
-  const defaultEmp = employees[0] || {
-    id: 'emp_001',
-    name: 'Sarah Jenkins',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-    department: 'Human Resources'
+  const defaultEmpName = currentEmpRecord?.FullName || currentEmpRecord?.name || profile?.name || profile?.FullName || 'Employee';
+  const defaultEmpPhoto = profile?.UPhoto || currentEmpRecord?.UPhoto || profile?.avatar || currentEmpRecord?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(defaultEmpName)}&background=F15E8C&color=fff`;
+
+  const defaultEmp = {
+    id: currentEmpRecord?.id || currentEmpRecord?.UserID || profile?.uid || profile?.UserID || 'emp_001',
+    name: defaultEmpName,
+    avatar: defaultEmpPhoto,
+    UPhoto: defaultEmpPhoto,
+    department: currentEmpRecord?.Department || currentEmpRecord?.department || profile?.department || 'Human Resources'
   };
 
-  // Filter logs exclusively for the current logged-in user
+  // Filter logs for logged-in user (or show all logs if Admin/HR)
   const userAttendanceLogs = useMemo(() => {
     if (!attendanceLogs || attendanceLogs.length === 0) return [];
-    
+
+    const profUid = (profile?.uid || profile?.UserID || profile?.id || user?.uid || user?.id || '').trim().toLowerCase();
+    const profName = (profile?.name || profile?.FullName || profile?.Username || user?.displayName || '').trim().toLowerCase();
+    const profEmail = (profile?.email || profile?.Email || '').trim().toLowerCase();
+    const profUser = (profile?.username || profile?.Username || '').trim().toLowerCase();
+
+    const userRole = (profile?.role || profile?.Role || 'Employee').trim().toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'hr';
+
     return attendanceLogs.filter(log => {
+      if (isAdmin) return true; // Admin/HR role gets visibility of all attendance logs
+
       const logUserId = (log.UserID || log.employeeId || '').trim().toLowerCase();
       const logUserName = (log.UserName || log.employeeName || '').trim().toLowerCase();
       const logEmail = (log.email || log.Email || '').trim().toLowerCase();
 
-      const profUid = (profile?.uid || profile?.UserID || profile?.id || user?.uid || user?.id || '').trim().toLowerCase();
-      const profName = (profile?.name || profile?.FullName || user?.displayName || '').trim().toLowerCase();
-      const profEmail = (profile?.email || profile?.Email || '').trim().toLowerCase();
-      const profUser = (profile?.username || profile?.Username || '').trim().toLowerCase();
-
-      const isUidMatch = profUid && logUserId && logUserId === profUid;
-      const isNameMatch = profName && logUserName && logUserName === profName;
+      const isUidMatch = profUid && logUserId && (logUserId === profUid || logUserId.includes(profUid) || profUid.includes(logUserId));
+      const isNameMatch = profName && logUserName && (logUserName === profName || logUserName.includes(profName) || profName.includes(logUserName));
       const isEmailMatch = profEmail && logEmail && logEmail === profEmail;
-      const isUsernameMatch = profUser && logUserId && logUserId.includes(profUser);
+      const isUsernameMatch = profUser && (logUserId.includes(profUser) || logUserName.includes(profUser));
 
       return isUidMatch || isNameMatch || isEmailMatch || isUsernameMatch;
     });
@@ -173,7 +250,12 @@ export const DailyAttendanceScreen = ({ navigation }) => {
 
       // Find real logged-in user attendance records in Firebase for dateKey
       const dayLogs = userAttendanceLogs.filter(l => {
-        const lDate = l.date || l.PostingDate || (l.CreatedOn ? l.CreatedOn.split('T')[0] : '');
+        let lDate = (l.date || l.PostingDate || (l.CreatedOn ? l.CreatedOn.split('T')[0] : '')).trim();
+        if (lDate.includes('/')) lDate = lDate.replace(/\//g, '-');
+        if (/^\d{2}-\d{2}-\d{4}$/.test(lDate)) {
+          const p = lDate.split('-');
+          lDate = `${p[2]}-${p[1]}-${p[0]}`;
+        }
         return lDate === dateKey;
       });
 
@@ -339,6 +421,7 @@ export const DailyAttendanceScreen = ({ navigation }) => {
   };
 
   const handleFaceClockIn = () => {
+    const hasUPhoto = Boolean(profile?.UPhoto || defaultEmp?.UPhoto);
     setModalType('face');
     setScanning(true);
     setVerified(false);
@@ -347,19 +430,59 @@ export const DailyAttendanceScreen = ({ navigation }) => {
     setModalVisible(true);
 
     setTimeout(() => {
-      setScanStep('Detecting Facial Landmarks & Mesh...');
+      setScanStep('Detecting Facial Landmarks & Mesh (128D Vector)...');
     }, 1200);
 
     setTimeout(() => {
-      setScanStep('Comparing with Enrolled Employee Photo (UPhoto / Avatar)...');
+      setScanStep(`Comparing Camera Scan against Stored UPhoto for ${activeUserName}...`);
     }, 2400);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       setScanning(false);
-      setVerified(true);
-      setMatchScore('99.2% Biometric Match Verified!');
-      setScanStep('Face Identification Success!');
-    }, 3600);
+      if (!hasUPhoto) {
+        setVerified(false);
+        setMatchScore('0.0% - No UPhoto Enrolled');
+        setScanStep('ACCESS DENIED: No Biometric UPhoto found!');
+        Alert.alert(
+          "Biometric UPhoto Missing! ❌",
+          `User '${activeUserName}' does not have a registered face photo (UPhoto). Please enroll your face photo in Employee Self Service (ESS) first before taking attendance.`
+        );
+        return;
+      }
+
+      const liveCameraSnapshot = getLiveCameraFrame();
+      const registeredUPhoto = profile?.UPhoto || defaultEmp?.UPhoto;
+
+      if (!liveCameraSnapshot && Platform.OS === 'web') {
+        setVerified(false);
+        setMatchScore('0.0% - Camera Feed Missing');
+        setScanStep('ACCESS DENIED: Live Camera stream not active!');
+        Alert.alert(
+          "Live Camera Stream Required! ❌",
+          "Could not capture live camera frame. Please allow camera permissions and position your face inside the scanner grid."
+        );
+        return;
+      }
+
+      const res = await findBestFaceMatch(liveCameraSnapshot || registeredUPhoto, employees, profile || defaultEmp);
+
+      if (res.success && res.matchedEmployee) {
+        setVerified(true);
+        setActiveMatchedEmp(res.matchedEmployee);
+        const matchedName = res.matchedEmployee.FullName || res.matchedEmployee.name || activeUserName;
+        setMatchScore(`${res.score}% Biometric Match Verified (${matchedName}) ✅`);
+        setScanStep(`Face Matched with Registered UPhoto for ${matchedName}!`);
+      } else {
+        setVerified(false);
+        setActiveMatchedEmp(null);
+        setMatchScore(`${res.score}% - Biometric Mismatch ❌`);
+        setScanStep('ACCESS DENIED: Face does NOT match any registered employee!');
+        Alert.alert(
+          "Biometric Face Mismatch! ❌",
+          `Face Recognition Failed (Best Match: ${res.score}%).\n\nThe person in front of the camera does NOT match any registered employee's UPhoto in the system.\n\nAttendance Punch BLOCKED.`
+        );
+      }
+    }, 3200);
   };
 
   const handleSelfieClockIn = async () => {
@@ -373,15 +496,31 @@ export const DailyAttendanceScreen = ({ navigation }) => {
   };
 
   const confirmModalAction = async () => {
-    setModalVisible(false);
-    const methodText = modalType === 'face' 
-      ? `Biometric Face Recognition (Match: 99.2%)` 
-      : modalType === 'qr' 
-      ? 'QR Code Scanner' 
-      : 'Selfie + GPS Attendance';
-      
-    await toggleClockIn(activeUserId, activeUserName, methodText);
-    Alert.alert("Success", `Punch Recorded via ${modalType === 'face' ? 'Face Detection' : modalType.toUpperCase()}!`);
+    try {
+      setModalVisible(false);
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toISOString().split('T')[0];
+
+      const punchEmp = activeMatchedEmp || profile || defaultEmp;
+      const punchEmpId = punchEmp?.UserID || punchEmp?.id || activeUserId;
+      const punchEmpName = punchEmp?.FullName || punchEmp?.name || activeUserName;
+
+      const methodText = modalType === 'face' 
+        ? `Biometric Face Recognition (UPhoto Verified) at ${timeStr}` 
+        : modalType === 'qr' 
+        ? `QR Code Scanner at ${timeStr}` 
+        : `Selfie + GPS Attendance at ${timeStr}`;
+        
+      await toggleClockIn(punchEmpId, punchEmpName, methodText);
+
+      Alert.alert(
+        "Attendance Punch Logged! 🎉",
+        `✅ Attendance Recorded Successfully\n\n👤 Employee: ${punchEmpName}\n📅 Date: ${dateStr}\n⏰ Time: ${timeStr}\n📌 Method: ${methodText}`
+      );
+    } catch (e) {
+      Alert.alert("Punch Error", e.message || "Failed to record punch.");
+    }
   };
 
   return (
@@ -681,7 +820,29 @@ export const DailyAttendanceScreen = ({ navigation }) => {
                 
                 {/* Live Scanner Viewfinder */}
                 <View style={styles.viewfinderFrame}>
-                  <Image source={{ uri: defaultEmp.avatar || defaultEmp.UPhoto }} style={styles.scannerFaceImg} />
+                  {Platform.OS === 'web' && hasCameraStream ? (
+                    <video
+                      ref={(node) => {
+                        videoRef.current = node;
+                        if (node && streamRef.current && node.srcObject !== streamRef.current) {
+                          node.srcObject = streamRef.current;
+                          node.play().catch(() => {});
+                        }
+                      }}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: 16,
+                        transform: 'scaleX(-1)',
+                      }}
+                    />
+                  ) : (
+                    <Image source={{ uri: defaultEmp.avatar || defaultEmp.UPhoto }} style={styles.scannerFaceImg} />
+                  )}
 
                   {/* Scanning HUD Overlay Line */}
                   {scanning && (

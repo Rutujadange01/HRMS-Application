@@ -40,7 +40,7 @@ export const CustomDrawerContent = (props) => {
       {/* Header Profile Section */}
       <View style={styles.profileSection}>
         <Image 
-          source={{ uri: profile?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' }} 
+          source={{ uri: profile?.UPhoto || profile?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&background=F15E8C&color=fff` }} 
           style={styles.avatar} 
         />
         <View style={styles.profileInfo}>
@@ -168,14 +168,19 @@ const styles = StyleSheet.create({
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 12,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
   },
   logoutText: {
     color: '#ef4444',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     marginLeft: 12,
   },
   versionText: {

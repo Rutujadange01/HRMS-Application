@@ -4,6 +4,7 @@ import { AttendanceBadge } from '../../components/AttendanceBadge';
 import { COLORS } from '../../constants/theme';
 import { Mail, Phone, Calendar, Shield, ArrowLeft, Trash2, Edit3, Save, X, IndianRupee, Camera, Check, Building, CreditCard, Landmark, User } from 'lucide-react-native';
 import { HRMSContext } from '../../context/HRMSContext';
+import { AuthContext } from '../../context/AuthContext';
 import { CustomInput } from '../../components/CustomInput';
 import { DatePickerInput } from '../../components/DatePickerInput';
 import { PrimaryButton } from '../../components/PrimaryButton';
@@ -19,6 +20,7 @@ const AVATAR_PRESETS = [
 
 export const EmployeeDetailScreen = ({ route, navigation }) => {
   const { deleteEmployee, updateEmployee, departments } = useContext(HRMSContext);
+  const { profile, setProfile } = useContext(AuthContext);
 
   const initialEmp = route.params?.employee || {
     id: 'emp_001',
@@ -131,6 +133,10 @@ export const EmployeeDetailScreen = ({ route, navigation }) => {
       };
 
       await updateEmployee(empId, updatedFields);
+
+      if (setProfile && (empId === profile?.uid || empId === profile?.UserID || empId === profile?.id)) {
+        setProfile(prev => ({ ...prev, ...updatedFields }));
+      }
 
       const merged = { ...currentEmp, ...updatedFields };
       setCurrentEmp(merged);

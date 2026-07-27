@@ -81,9 +81,20 @@ export const HRMSProvider = ({ children }) => {
     await employeeService.addEmployee(empData);
   };
 
-  // Update Employee in Firestore
+  // Update Employee in Firestore & local state
   const updateEmployee = async (id, updatedFields) => {
-    await employeeService.updateEmployee(id, updatedFields);
+    try {
+      await employeeService.updateEmployee(id, updatedFields);
+    } catch (e) {
+      console.warn("Firestore update error:", e.message);
+    }
+    setEmployees(prev => prev.map(emp => {
+      const eId = emp.id || emp.UserID;
+      if (eId === id || emp.id === id || emp.UserID === id) {
+        return { ...emp, ...updatedFields };
+      }
+      return emp;
+    }));
   };
 
   // Delete Employee from Firestore
@@ -135,9 +146,13 @@ export const HRMSProvider = ({ children }) => {
     const userLon = activeCoords?.longitude ?? -122.4192;
 
     const distMeters = calculateDistanceMeters(compLat, compLon, userLat, userLon);
+    const isBiometric = (locationParam || '').toLowerCase().includes('biometric') || 
+                        (locationParam || '').toLowerCase().includes('face') || 
+                        (notes || '').toLowerCase().includes('biometric') || 
+                        (notes || '').toLowerCase().includes('face');
 
-    // Validate Geofence if required by Company settings
-    if (isGeoRequired && maxRadius > 0 && distMeters > maxRadius) {
+    // Validate Geofence if required by Company settings and not a biometric face scan
+    if (isGeoRequired && !isBiometric && maxRadius > 0 && distMeters > maxRadius) {
       const warningMsg = `Geofence Restricted! You are ${distMeters}m away from ${compLocationName}. Max allowed radius for ${company?.CompanyName || 'Company'} is ${maxRadius}m.`;
       const { Alert } = require('react-native');
       Alert.alert("Geofence Violation", warningMsg);

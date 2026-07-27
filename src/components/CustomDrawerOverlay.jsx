@@ -27,7 +27,7 @@ import {
 
 export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute }) => {
   const { profile, logout } = useContext(AuthContext);
-  const userRole = profile?.role || 'Admin';
+  const userRole = (profile?.role || profile?.Role || 'Admin').trim();
 
   const menuStructure = [
     {
@@ -132,11 +132,13 @@ export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute
     navigation.navigate(route);
   };
 
+  const normalizedUserRole = userRole.toLowerCase();
+
   const authorizedModules = menuStructure
-    .filter(mod => mod.roles.includes(userRole))
+    .filter(mod => mod.roles.some(r => r.toLowerCase() === normalizedUserRole))
     .map(mod => ({
       ...mod,
-      subModules: mod.subModules.filter(sub => sub.roles.includes(userRole))
+      subModules: mod.subModules.filter(sub => sub.roles.some(r => r.toLowerCase() === normalizedUserRole))
     }))
     .filter(mod => mod.subModules.length > 0);
 
@@ -148,7 +150,7 @@ export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute
             <View style={styles.drawerHeader}>
               <View style={styles.profileSection}>
                 <Image 
-                  source={{ uri: profile?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' }} 
+                  source={{ uri: profile?.UPhoto || profile?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&background=F15E8C&color=fff` }} 
                   style={styles.avatar} 
                 />
                 <View style={styles.profileInfo}>
@@ -444,8 +446,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginHorizontal: 10,
-    borderRadius: 10,
-    backgroundColor: '#fef2f2',
+    borderRadius: 12,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
   },
   logoutText: {
     fontSize: 13,

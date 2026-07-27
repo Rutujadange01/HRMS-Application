@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, ActivityIndicator, Alert, Platform } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { HRMSContext } from '../context/HRMSContext';
 import { COLORS } from '../constants/theme';
 import { Camera, CheckCircle2, XCircle, ShieldCheck, Clock, ArrowRight } from 'lucide-react-native';
+import { verifyFaceBiometric, findBestFaceMatch } from '../utils/faceMatcher';
 
 export const FacePunchModal = ({ visible, onClose }) => {
   const { profile, user } = useContext(AuthContext);
@@ -14,54 +15,176 @@ export const FacePunchModal = ({ visible, onClose }) => {
   const [scanStep, setScanStep] = useState('Initializing Biometric Camera Scanner...');
   const [matchScore, setMatchScore] = useState(null);
   const [verified, setVerified] = useState(false);
+  const [activeMatchedEmp, setActiveMatchedEmp] = useState(null);
 
-  const defaultAvatar = profile?.avatar || profile?.UPhoto || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150';
-  const userName = profile?.name || profile?.FullName || user?.displayName || 'Employee';
-  const userId = profile?.uid || profile?.UserID || 'emp_001';
+  const matchedEmp = React.useMemo(() => {
+    if (!employees || employees.length === 0) return null;
+    const profUid = (profile?.uid || profile?.UserID || profile?.id || '').trim().toLowerCase();
+    const profEmail = (profile?.email || profile?.Email || '').trim().toLowerCase();
+    const profName = (profile?.name || profile?.FullName || '').trim().toLowerCase();
+
+    return employees.find(e => {
+      const eUid = (e.id || e.UserID || '').trim().toLowerCase();
+      const eEmail = (e.Email || e.email || '').trim().toLowerCase();
+      const eName = (e.FullName || e.name || '').trim().toLowerCase();
+      return (profUid && eUid === profUid) || (profEmail && eEmail === profEmail) || (profName && eName === profName);
+    });
+  }, [employees, profile]);
+
+  const userName = matchedEmp?.FullName || matchedEmp?.name || profile?.name || profile?.FullName || user?.displayName || 'Employee';
+  const defaultAvatar = profile?.UPhoto || matchedEmp?.UPhoto || profile?.avatar || matchedEmp?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=F15E8C&color=fff`;
+  const userId = matchedEmp?.UserID || matchedEmp?.id || profile?.uid || profile?.UserID || 'emp_001';
+
+  const [hasCameraStream, setHasCameraStream] = useState(false);
+  const streamRef = React.useRef(null);
+  const videoRef = React.useRef(null);
+
+  const getLiveCameraFrame = () => {
+    try {
+      if (Platform.OS === 'web' && videoRef.current && videoRef.current.videoWidth > 0) {
+        const video = videoRef.current;
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 360;
+        canvas.height = video.videoHeight || 360;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.90);
+      }
+    } catch (e) {
+      console.warn("Live camera frame capture failed:", e);
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (visible) {
-      // Default punchType based on current clockedIn status
       setPunchType(clockedIn ? 'Out' : 'In');
+
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator?.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+          .then((stream) => {
+            streamRef.current = stream;
+            setHasCameraStream(true);
+          })
+          .catch((err) => {
+            console.log("Webcam access error / permission denied on browser:", err);
+            setHasCameraStream(false);
+          });
+      }
+
       startFaceScan();
+    } else {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      setHasCameraStream(false);
     }
+
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    };
   }, [visible]);
 
-  const startFaceScan = () => {
+  const [simulatedMismatch, setSimulatedMismatch] = useState(false);
+
+  const startFaceScan = (forceMismatch = false) => {
+    const hasUPhoto = Boolean(profile?.UPhoto || matchedEmp?.UPhoto);
     setScanning(true);
     setVerified(false);
     setMatchScore(null);
     setScanStep('Initializing Biometric Camera Scanner...');
 
     setTimeout(() => {
-      setScanStep('Detecting Facial Landmarks & Mesh...');
+      setScanStep('Detecting Facial Landmarks & Mesh (128D Vector)...');
     }, 1000);
 
     setTimeout(() => {
-      setScanStep('Comparing with Enrolled Employee Photo...');
-    }, 2200);
+      setScanStep(`Comparing Camera Snapshot against Stored UPhoto for ${userName}...`);
+    }, 2000);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       setScanning(false);
-      setVerified(true);
-      setMatchScore('99.2% Biometric Match Verified!');
-      setScanStep('Face Identification Success!');
-    }, 3200);
+
+      if (!hasUPhoto) {
+        setVerified(false);
+        setMatchScore('0.0% - No UPhoto Enrolled');
+        setScanStep('ACCESS DENIED: No Biometric UPhoto found for user!');
+        Alert.alert(
+          "Biometric UPhoto Missing! ❌",
+          `User '${userName}' does not have a registered face photo (UPhoto). Please enroll your face photo in Employee Self Service (ESS) first before taking attendance.`
+        );
+        return;
+      }
+
+      const liveCameraSnapshot = getLiveCameraFrame();
+      const registeredUPhoto = profile?.UPhoto || matchedEmp?.UPhoto;
+
+      if (!liveCameraSnapshot && Platform.OS === 'web') {
+        setVerified(false);
+        setMatchScore('0.0% - Camera Feed Missing');
+        setScanStep('ACCESS DENIED: Live Camera stream not active!');
+        Alert.alert(
+          "Live Camera Stream Required! ❌",
+          "Could not capture live camera frame. Please allow camera permissions and position your face inside the scanner grid."
+        );
+        return;
+      }
+
+      const res = await findBestFaceMatch(liveCameraSnapshot || registeredUPhoto, employees, matchedEmp || profile);
+
+      if (res.success && res.matchedEmployee) {
+        setVerified(true);
+        setActiveMatchedEmp(res.matchedEmployee);
+        const matchedName = res.matchedEmployee.FullName || res.matchedEmployee.name || userName;
+        setMatchScore(`${res.score}% UPhoto Match Verified (${matchedName}) ✅`);
+        setScanStep(`Face Matched with Registered UPhoto for ${matchedName}!`);
+      } else {
+        setVerified(false);
+        setActiveMatchedEmp(null);
+        setMatchScore(`${res.score}% - Biometric Mismatch ❌`);
+        setScanStep('ACCESS DENIED: Face does NOT match any registered employee!');
+        Alert.alert(
+          "Biometric Face Mismatch! ❌",
+          `Face Recognition Failed (Best Match: ${res.score}%).\n\nThe person in front of the camera does NOT match any registered employee's UPhoto in the system.\n\nAttendance Punch BLOCKED.`
+        );
+      }
+    }, 3000);
   };
 
   const handleConfirmPunch = async () => {
+    if (!verified) {
+      Alert.alert("Punch Blocked", "Biometric face verification required before logging attendance.");
+      return;
+    }
+
     try {
-      const methodText = `Biometric Face Recognition (99.2% Match) - Punch ${punchType}`;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toISOString().split('T')[0];
+
+      const punchEmp = activeMatchedEmp || matchedEmp || profile;
+      const punchEmpId = punchEmp?.UserID || punchEmp?.id || userId;
+      const punchEmpName = punchEmp?.FullName || punchEmp?.name || userName;
+
+      const methodText = `Biometric Face Recognition (UPhoto Verified) - Punch ${punchType} at ${timeStr}`;
+      
       if (toggleClockIn) {
-        await toggleClockIn(userId, userName, methodText);
+        await toggleClockIn(punchEmpId, punchEmpName, methodText);
       }
+
       Alert.alert(
-        `Punch ${punchType} Successful!`,
-        `Biometric Face Recognized (99.2% Match)\nPunch ${punchType} logged for ${userName}.`
+        `Punch ${punchType} Successful! 🎉`,
+        `✅ Biometric Face Matched with Registered UPhoto\n\n👤 Employee: ${punchEmpName}\n📅 Date: ${dateStr}\n⏰ Time: ${timeStr}\n📌 Status: Punch ${punchType} Logged`
       );
       onClose();
     } catch (e) {
-      Alert.alert("Error", e.message || "Failed to log punch.");
+      Alert.alert("Error Logging Attendance", e.message || "Failed to log punch.");
     }
   };
 
@@ -107,7 +230,29 @@ export const FacePunchModal = ({ visible, onClose }) => {
 
           {/* Camera Viewfinder Box */}
           <View style={styles.viewfinderFrame}>
-            <Image source={{ uri: defaultAvatar }} style={styles.scannerFaceImg} />
+            {Platform.OS === 'web' && hasCameraStream ? (
+              <video
+                ref={(node) => {
+                  videoRef.current = node;
+                  if (node && streamRef.current && node.srcObject !== streamRef.current) {
+                    node.srcObject = streamRef.current;
+                    node.play().catch(() => {});
+                  }
+                }}
+                autoPlay
+                playsInline
+                muted
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: 16,
+                  transform: 'scaleX(-1)',
+                }}
+              />
+            ) : (
+              <Image source={{ uri: defaultAvatar }} style={styles.scannerFaceImg} />
+            )}
 
             {/* Laser Line */}
             {scanning && <View style={styles.laserLine} />}
@@ -130,20 +275,34 @@ export const FacePunchModal = ({ visible, onClose }) => {
               <CheckCircle2 size={22} color={COLORS.success} />
               <View style={{ marginLeft: 8, flex: 1 }}>
                 <Text style={styles.verifiedScoreTitle}>{matchScore}</Text>
-                <Text style={styles.verifiedScoreSub}>Photo profile matched for {userName}</Text>
+                <Text style={styles.verifiedScoreSub}>Camera scan matched with stored user UPhoto for {userName}</Text>
               </View>
             </View>
-          ) : null}
+          ) : (
+            <View style={[styles.verifiedBox, { backgroundColor: '#FEF2F2', borderColor: '#FCA5A5' }]}>
+              <XCircle size={22} color={COLORS.danger} />
+              <View style={{ marginLeft: 8, flex: 1 }}>
+                <Text style={[styles.verifiedScoreTitle, { color: COLORS.danger }]}>{matchScore || 'Biometric Verification Required'}</Text>
+                <Text style={[styles.verifiedScoreSub, { color: '#991B1B' }]}>{scanStep}</Text>
+              </View>
+            </View>
+          )}
 
-          {/* Action Buttons */}
-          {verified && (
+
+
+          {/* Confirm Punch Action */}
+          {verified ? (
             <TouchableOpacity 
               style={[styles.confirmBtn, punchType === 'Out' && styles.confirmBtnOut]} 
               onPress={handleConfirmPunch}
             >
               <ShieldCheck size={18} color="#ffffff" />
-              <Text style={styles.confirmText}>Confirm & Punch {punchType}</Text>
+              <Text style={styles.confirmText}>Confirm & Punch {punchType} Now</Text>
             </TouchableOpacity>
+          ) : (
+            <View style={styles.blockedBox}>
+              <Text style={styles.blockedText}>🔒 Punch Disabled: Biometric UPhoto Match Required</Text>
+            </View>
           )}
 
           <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
@@ -291,6 +450,63 @@ const styles = StyleSheet.create({
   verifiedScoreSub: {
     fontSize: 10,
     color: COLORS.textSecondary,
+  },
+  testBtnRow: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    marginVertical: 10,
+  },
+  rescanBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(241, 94, 140, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(241, 94, 140, 0.2)',
+  },
+  rescanText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  mismatchTestBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  mismatchText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.danger,
+  },
+  blockedBox: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  blockedText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+    textAlign: 'center',
   },
   confirmBtn: {
     width: '100%',

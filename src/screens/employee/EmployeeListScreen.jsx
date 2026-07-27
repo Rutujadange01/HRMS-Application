@@ -4,12 +4,11 @@ import { HRMSContext } from '../../context/HRMSContext';
 import { EmployeeCard } from '../../components/EmployeeCard';
 import { COLORS } from '../../constants/theme';
 import { Search, UserPlus } from 'lucide-react-native';
-
 import { AuthContext } from '../../context/AuthContext';
 
 export const EmployeeListScreen = ({ navigation }) => {
   const { profile } = useContext(AuthContext);
-  const { employees, departments } = useContext(HRMSContext);
+  const { employees = [], departments = [] } = useContext(HRMSContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('All');
 
@@ -20,25 +19,28 @@ export const EmployeeListScreen = ({ navigation }) => {
   const profName = (profile?.name || profile?.FullName || '').trim().toLowerCase();
   const profEmail = (profile?.email || profile?.Email || '').trim().toLowerCase();
 
-  const filteredEmployees = employees.filter((emp) => {
-    const empName = emp.name || emp.FullName || '';
-    const empEmail = emp.email || emp.Email || '';
-    const empDesig = emp.designation || emp.Designation || '';
+  const deptList = ['All', ...(departments || []).map(d => (typeof d === 'string' ? d : d?.name || d?.DepartmentName || d?.Department || ''))].filter(Boolean);
+
+  const filteredEmployees = (employees || []).filter((emp) => {
+    const empName = emp.FullName || emp.name || emp.Username || '';
+    const empEmail = emp.Email || emp.email || '';
+    const empDesig = emp.Designation || emp.designation || '';
+    const empDept = emp.Department || emp.department || emp.DepartmentID || '';
 
     const matchesSearch =
       empName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       empEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
       empDesig.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesDept = selectedDept === 'All' || emp.department === selectedDept;
+    const matchesDept = selectedDept === 'All' || empDept.toLowerCase() === selectedDept.toLowerCase();
 
     return matchesSearch && matchesDept;
   });
 
   const displayedEmployees = isEmployee
-    ? employees.filter(emp => {
-        const empId = (emp.UserID || emp.id || '').trim().toLowerCase();
-        const empName = (emp.FullName || emp.name || '').trim().toLowerCase();
+    ? (employees || []).filter(emp => {
+        const empId = (emp.UserID || emp.id || emp.UserCode || '').trim().toLowerCase();
+        const empName = (emp.FullName || emp.name || emp.Username || '').trim().toLowerCase();
         const empEmail = (emp.Email || emp.email || '').trim().toLowerCase();
         return (profUid && empId === profUid) || (profName && empName === profName) || (profEmail && empEmail === profEmail);
       })
@@ -77,29 +79,31 @@ export const EmployeeListScreen = ({ navigation }) => {
       </View>
 
       {/* Department Filter Chips */}
-      <View style={styles.filterWrapper}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={['All', ...departments.map(d => d.name)]}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.filterChip, selectedDept === item && styles.filterChipActive]}
-              onPress={() => setSelectedDept(item)}
-            >
-              <Text style={[styles.filterChipText, selectedDept === item && styles.filterChipTextActive]}>
-                {item}
-              </Text>
-            </TouchableOpacity>
-          )}
-        />
-      </View>
+      {deptList.length > 1 && (
+        <View style={styles.filterWrapper}>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={deptList}
+            keyExtractor={(item, index) => item + index}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.filterChip, selectedDept === item && styles.filterChipActive]}
+                onPress={() => setSelectedDept(item)}
+              >
+                <Text style={[styles.filterChipText, selectedDept === item && styles.filterChipTextActive]}>
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
 
       {/* Employee List */}
       <FlatList
         data={displayedEmployees}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item.id || item.UserID || item.UserCode || index.toString()}
         renderItem={({ item }) => (
           <EmployeeCard
             employee={item}
@@ -140,13 +144,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   addBtn: {
-    backgroundColor: COLORS.primary,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
-    gap: 6,
   },
   addBtnText: {
     color: '#ffffff',
@@ -157,50 +161,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.cardBg,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 46,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: 12,
   },
   searchInput: {
     flex: 1,
-    color: COLORS.textPrimary,
+    marginLeft: 8,
     fontSize: 14,
-    marginLeft: 10,
+    color: COLORS.textPrimary,
   },
   filterWrapper: {
-    marginBottom: 14,
-    height: 38,
+    marginBottom: 12,
   },
   filterChip: {
-    backgroundColor: COLORS.cardBg,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: COLORS.cardBg,
+    marginRight: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginRight: 8,
   },
   filterChipActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
   filterChipText: {
-    color: COLORS.textSecondary,
     fontSize: 12,
     fontWeight: '600',
+    color: COLORS.textSecondary,
   },
   filterChipTextActive: {
     color: '#ffffff',
+    fontWeight: '700',
   },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 20,
   },
   emptyContainer: {
-    padding: 32,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
   emptyText: {
     color: COLORS.textSecondary,

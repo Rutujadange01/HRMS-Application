@@ -17,7 +17,8 @@ export const AuthProvider = ({ children }) => {
       email: 'admin@acmeenterprise.com',
       role: 'Admin',
       companyId: 'comp_01',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'
+      UPhoto: null,
+      avatar: 'https://ui-avatars.com/api/?name=Sarah+Jenkins&background=F15E8C&color=fff'
     });
   }, []);
 
