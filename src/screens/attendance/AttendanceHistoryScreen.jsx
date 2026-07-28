@@ -313,10 +313,7 @@ export const AttendanceHistoryScreen = ({ navigation }) => {
       {/* Banner */}
       <View style={styles.calendarBanner}>
         <View style={styles.bannerNavRow}>
-          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => navigation.goBack()}>
-            <View style={styles.bannerBackIcon}>
-              <ArrowLeft size={18} color="#ffffff" />
-            </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ marginLeft: 10 }}>
               <Text style={styles.bannerTitle}>My Attendance History</Text>
               <Text style={styles.bannerSub}>{profile?.name || 'Logged-In User'} • {currentMonthTitle}</Text>

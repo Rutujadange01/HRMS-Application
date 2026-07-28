@@ -195,11 +195,6 @@ export const AttendanceCorrectionScreen = ({ navigation }) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header Actions */}
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <ArrowLeft size={20} color={COLORS.primary} />
-        <Text style={styles.backText}>Back to Dashboard</Text>
-      </TouchableOpacity>
-
       <View style={styles.titleRow}>
         <Text style={styles.screenTitle} numberOfLines={1}>Attendance Correction Requests</Text>
 

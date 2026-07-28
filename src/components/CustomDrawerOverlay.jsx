@@ -3,18 +3,18 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Modal } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import { COLORS } from '../constants/theme';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Clock, 
-  IndianRupee, 
-  Calendar, 
-  CreditCard, 
-  Package, 
-  UserCheck, 
-  FileSpreadsheet, 
-  Settings, 
-  Wand2, 
+import {
+  LayoutDashboard,
+  Users,
+  Clock,
+  IndianRupee,
+  Calendar,
+  CreditCard,
+  Package,
+  UserCheck,
+  FileSpreadsheet,
+  Settings,
+  Wand2,
   LogOut,
   ChevronRight,
   ChevronDown,
@@ -105,28 +105,6 @@ export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute
     }
   ];
 
-  const [expanded, setExpanded] = useState({
-    dashboard: true,
-    workforce: true,
-    attendance: true,
-    payroll: true,
-    assets: true,
-    reports: true,
-    settings: true
-  });
-
-  useEffect(() => {
-    menuStructure.forEach(mod => {
-      if (mod.subModules.some(sub => sub.route === currentRoute)) {
-        setExpanded(prev => ({ ...prev, [mod.id]: true }));
-      }
-    });
-  }, [currentRoute]);
-
-  const toggleModule = (id) => {
-    setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
   const handleNavigate = (route) => {
     onClose();
     navigation.navigate(route);
@@ -143,15 +121,14 @@ export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute
     .filter(mod => mod.subModules.length > 0);
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.overlayBg}>
-        <SafeAreaView style={styles.drawerContainer}>
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={styles.drawerContainer} edges={['top', 'bottom']}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.drawerHeader}>
               <View style={styles.profileSection}>
-                <Image 
-                  source={{ uri: profile?.UPhoto || profile?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&background=F15E8C&color=fff` }} 
-                  style={styles.avatar} 
+                <Image
+                  source={{ uri: profile?.UPhoto || profile?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&background=F15E8C&color=fff` }}
+                  style={styles.avatar}
                 />
                 <View style={styles.profileInfo}>
                   <Text style={styles.userName}>{profile?.name || 'Sarah Jenkins'}</Text>
@@ -167,69 +144,33 @@ export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute
             </View>
 
             <View style={styles.divider} />
-
             <View style={styles.menuContainer}>
-              <Text style={styles.sectionHeader}>MAIN MODULES</Text>
-
               {authorizedModules.map((mainMod) => {
-                const MainIcon = mainMod.icon;
-                const isExpanded = expanded[mainMod.id];
-                const hasActiveSub = mainMod.subModules.some(s => s.route === currentRoute);
-
                 return (
-                  <View key={mainMod.id} style={styles.moduleWrapper}>
-                    <TouchableOpacity
-                      style={[styles.mainModuleHeader, hasActiveSub && styles.mainModuleHeaderActive]}
-                      onPress={() => toggleModule(mainMod.id)}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.mainModuleLeft}>
-                        <View style={[styles.mainIconContainer, hasActiveSub && styles.mainIconContainerActive]}>
-                          <MainIcon size={18} color={hasActiveSub ? COLORS.white : COLORS.primary} />
-                        </View>
-                        <Text style={[styles.mainModuleTitle, hasActiveSub && styles.mainModuleTitleActive]}>
-                          {mainMod.mainModule}
-                        </Text>
-                      </View>
-                      <View style={styles.mainModuleRight}>
-                        {isExpanded ? (
-                          <ChevronDown size={16} color={COLORS.textSecondary} />
-                        ) : (
-                          <ChevronRight size={16} color={COLORS.textSecondary} />
-                        )}
-                      </View>
-                    </TouchableOpacity>
+                  <View key={mainMod.id} style={styles.moduleSection}>
+                    <Text style={styles.sectionTitle}>{mainMod.mainModule}</Text>
+                    <View style={styles.gridContainer}>
+                      {mainMod.subModules.map((subItem, sIdx) => {
+                        const SubIcon = subItem.icon;
+                        const isSubFocused = currentRoute === subItem.route;
 
-                    {isExpanded && (
-                      <View style={styles.subModulesContainer}>
-                        {mainMod.subModules.map((subItem, sIdx) => {
-                          const SubIcon = subItem.icon;
-                          const isSubFocused = currentRoute === subItem.route;
-
-                          return (
-                            <TouchableOpacity
-                              key={sIdx}
-                              style={[styles.subModuleItem, isSubFocused && styles.subModuleItemActive]}
-                              onPress={() => handleNavigate(subItem.route)}
-                              activeOpacity={0.7}
-                            >
-                              <View style={styles.subItemLeft}>
-                                <View style={[styles.subBullet, isSubFocused && styles.subBulletActive]} />
-                                <SubIcon size={16} color={isSubFocused ? COLORS.primary : COLORS.textSecondary} />
-                                <Text style={[styles.subModuleLabel, isSubFocused && styles.subModuleLabelActive]}>
-                                  {subItem.label}
-                                </Text>
-                              </View>
-                              {isSubFocused && (
-                                <View style={styles.activePill}>
-                                  <Text style={styles.activePillText}>Active</Text>
-                                </View>
-                              )}
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    )}
+                        return (
+                          <TouchableOpacity
+                            key={sIdx}
+                            style={[styles.cardItem, isSubFocused && styles.cardItemActive]}
+                            onPress={() => handleNavigate(subItem.route)}
+                            activeOpacity={0.7}
+                          >
+                            <View style={[styles.iconWrapper, isSubFocused && styles.iconWrapperActive]}>
+                              <SubIcon size={22} color={isSubFocused ? COLORS.white : COLORS.primary} />
+                            </View>
+                            <Text style={[styles.cardLabel, isSubFocused && styles.cardLabelActive]} numberOfLines={2}>
+                              {subItem.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
                   </View>
                 );
               })}
@@ -244,28 +185,15 @@ export const CustomDrawerOverlay = ({ visible, onClose, navigation, currentRoute
 
             <Text style={styles.versionText}>Techno HRMS v2.5 • Main & Sub Modules</Text>
           </ScrollView>
-        </SafeAreaView>
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlayBg: {
-    flex: 1,
-    backgroundColor: 'rgba(30, 41, 59, 0.5)',
-    flexDirection: 'row',
-  },
-  backdrop: {
-    flex: 1,
-  },
   drawerContainer: {
-    width: 300,
+    flex: 1,
     backgroundColor: COLORS.cardBg,
-    height: '100%',
-    borderRightWidth: 1,
-    borderRightColor: COLORS.border,
   },
   scrollContent: {
     paddingVertical: 14,
@@ -326,119 +254,68 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   menuContainer: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 16,
   },
-  moduleWrapper: {
-    marginBottom: 6,
+  moduleSection: {
+    marginBottom: 20,
   },
-  mainModuleHeader: {
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.textSecondary,
+    marginBottom: 12,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  gridContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: COLORS.inputBg || '#f8fafc',
+    flexWrap: 'wrap',
+    marginHorizontal: -6,
   },
-  mainModuleHeaderActive: {
-    backgroundColor: '#eff6ff',
+  cardItem: {
+    width: '30%',
+    marginHorizontal: '1.5%',
+    marginBottom: 12,
+    backgroundColor: COLORS.inputBg || '#f8fafc',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
     borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  cardItemActive: {
+    backgroundColor: '#eff6ff',
     borderColor: '#bfdbfe',
   },
-  mainModuleLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  mainIconContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
+  iconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginBottom: 8,
   },
-  mainIconContainerActive: {
+  iconWrapperActive: {
     backgroundColor: COLORS.primary,
   },
-  mainModuleTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-  mainModuleTitleActive: {
-    color: COLORS.primary,
-  },
-  mainModuleRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  subCountBadge: {
-    backgroundColor: '#e2e8f0',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-    marginRight: 6,
-  },
-  subCountText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.textSecondary,
-  },
-  subModulesContainer: {
-    paddingLeft: 22,
-    paddingTop: 4,
-  },
-  subModuleItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 9,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    marginVertical: 2,
-  },
-  subModuleItemActive: {
-    backgroundColor: '#f0fdf4',
-    borderLeftWidth: 3,
-    borderLeftColor: COLORS.primary,
-  },
-  subItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  subBullet: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#cbd5e1',
-    marginRight: 10,
-  },
-  subBulletActive: {
-    backgroundColor: COLORS.primary,
-  },
-  subModuleLabel: {
-    fontSize: 12.5,
+  cardLabel: {
+    fontSize: 11,
     fontWeight: '600',
     color: COLORS.textSecondary,
-    marginLeft: 8,
+    textAlign: 'center',
+    lineHeight: 14,
   },
-  subModuleLabelActive: {
+  cardLabelActive: {
     color: COLORS.primary,
-    fontWeight: '700',
-  },
-  activePill: {
-    backgroundColor: '#dcfce7',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  activePillText: {
-    fontSize: 9,
     fontWeight: '800',
-    color: '#15803d',
   },
   logoutBtn: {
     flexDirection: 'row',

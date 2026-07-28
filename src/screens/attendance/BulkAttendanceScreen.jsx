@@ -131,21 +131,12 @@ export const BulkAttendanceScreen = ({ navigation }) => {
         <Text style={styles.accessDeniedSub}>
           Bulk Mark Attendance is available only to Admin, HR, and Manager roles.
         </Text>
-        <TouchableOpacity style={styles.backBtnDenied} onPress={() => navigation.goBack()}>
-          <Text style={styles.backTextDenied}>Return to Dashboard</Text>
-        </TouchableOpacity>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <ArrowLeft size={20} color={COLORS.primary} />
-        <Text style={styles.backText}>Back to Dashboard</Text>
-      </TouchableOpacity>
-
       {/* Screen Title */}
       <View style={styles.headerRow}>
         <View>

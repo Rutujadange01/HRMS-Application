@@ -3,21 +3,23 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Replace these values with your actual Firebase project config credentials
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "AIzaSyCDrlpwsgZw783NXvfwLUFFKgXwhjuSPWw",
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "hrmsapp-ba93d.firebaseapp.com",
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "hrmsapp-ba93d",
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "hrmsapp-ba93d.firebasestorage.app",
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "388754253779",
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "1:388754253779:web:54a80b491a530b050b3126",
-  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-CP5YZKV4SW"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "AIzaSyCEYWVe_BVpEFG5uZt00MF5IHQtUg7ACJY",
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "hrms-app-1abe3.firebaseapp.com",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "hrms-app-1abe3",
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "hrms-app-1abe3.firebasestorage.app",
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "868627090774",
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "1:868627090774:web:f72001a5c99484c7645af7",
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-8EWF5L629H"
 };
 
 let app;
 let auth = null;
 let db = null;
+let storage = null;
 
 try {
   if (!getApps().length) {
@@ -59,4 +61,14 @@ try {
   auth = null;
 }
 
-export { app, auth, db, firebaseConfig };
+// 3. Initialize Storage (Independent Block)
+try {
+  if (app) {
+    storage = getStorage(app);
+    console.log("📁 [FIREBASE SUCCESS] Cloud Storage connected successfully!");
+  }
+} catch (storageErr) {
+  console.error("❌ Cloud Storage Init Error:", storageErr.message);
+}
+
+export { app, auth, db, storage, firebaseConfig };

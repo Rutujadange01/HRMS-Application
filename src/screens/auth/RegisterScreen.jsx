@@ -32,10 +32,7 @@ export const RegisterScreen = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <ArrowLeft size={20} color={COLORS.primary} />
-        <Text style={styles.backText}>Back to Sign In</Text>
-      </TouchableOpacity>
+
 
       <Text style={styles.title}>Register Organization</Text>
       <Text style={styles.subtitle}>Setup company account & HR workspace in seconds</Text>

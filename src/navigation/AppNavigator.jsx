@@ -8,7 +8,7 @@ import { AuthContext } from '../context/AuthContext';
 import { FacePunchModal } from '../components/FacePunchModal';
 import { MoreServicesModal } from '../components/MoreServicesModal';
 import { COLORS } from '../constants/theme';
-import { Wand2, LayoutDashboard, Clock, UserCheck, Camera, Grid, MoreHorizontal } from 'lucide-react-native';
+import { Menu, Wand2, LayoutDashboard, Users, Clock, IndianRupee, UserCheck, Calendar, Camera, Grid, MoreHorizontal, MoreVertical } from 'lucide-react-native';
 
 // Auth Screens
 import { LoginScreen } from '../screens/auth/LoginScreen';
@@ -30,6 +30,7 @@ import { AdvanceLoanScreen } from '../screens/advance/AdvanceLoanScreen';
 import { ExpenseClaimScreen } from '../screens/expense/ExpenseClaimScreen';
 import { AssetManagementScreen } from '../screens/assets/AssetManagementScreen';
 import { EssDashboardScreen } from '../screens/ess/EssDashboardScreen';
+import { DocumentUploadScreen } from '../screens/ess/DocumentUploadScreen';
 import { ReportsScreen } from '../screens/reports/ReportsScreen';
 import { MastersScreen } from '../screens/masters/MastersScreen';
 import { CompanyProfileScreen } from '../screens/company/CompanyProfileScreen';
@@ -37,7 +38,7 @@ import { CompanyProfileScreen } from '../screens/company/CompanyProfileScreen';
 const Stack = createStackNavigator();
 
 // Custom Top Header Component
-const CustomHeader = ({ title, navigation }) => (
+const CustomHeader = ({ title, navigation, showWizard }) => (
   <SafeAreaView style={styles.headerSafeArea} edges={['top']}>
     <View style={styles.headerContainer}>
       <View style={styles.headerTitleContainer}>
@@ -46,15 +47,17 @@ const CustomHeader = ({ title, navigation }) => (
         </View>
         <Text style={styles.headerTitle}>{title}</Text>
       </View>
-      <TouchableOpacity style={styles.wizardBtn} onPress={() => navigation.navigate('PayrollWizard')}>
-        <Wand2 size={18} color={COLORS.primary} />
-      </TouchableOpacity>
+      {showWizard && (
+        <TouchableOpacity style={styles.wizardBtn} onPress={() => navigation.navigate('PayrollWizard')}>
+          <Wand2 size={18} color={COLORS.primary} />
+        </TouchableOpacity>
+      )}
     </View>
   </SafeAreaView>
 );
 
 // Persistent Bottom Navigation Bar with Center Punch (Face Detection) Action
-const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal, onOpenMoreModal }) => {
+const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal, onOpenDrawer, onOpenMoreModal }) => {
   return (
     <SafeAreaView style={styles.bottomBarSafeArea}>
       <View style={styles.bottomBarContainer}>
@@ -102,7 +105,19 @@ const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal, onOpen
         >
           <UserCheck size={20} color={activeRoute === 'EssDashboard' ? COLORS.primary : COLORS.textSecondary} />
           <Text style={[styles.tabLabel, activeRoute === 'EssDashboard' && styles.tabLabelActive]}>
-            ESS Portal
+            Settings
+          </Text>
+        </TouchableOpacity>
+
+        {/* More Options Tab (Sidebar Drawer) */}
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={onOpenDrawer}
+          activeOpacity={0.7}
+        >
+          <MoreVertical size={20} color={COLORS.textSecondary} />
+          <Text style={styles.tabLabel}>
+            More
           </Text>
         </TouchableOpacity>
 
@@ -124,6 +139,10 @@ const PersistentBottomBar = ({ activeRoute, onNavigate, onOpenPunchModal, onOpen
 
 // Main Navigation Shell
 const MainAppFlowScreen = ({ navigation }) => {
+  const { profile } = useContext(AuthContext);
+  const userRole = (profile?.role || profile?.Role || 'Employee').trim().toLowerCase();
+  const isAdminOrHR = userRole === 'admin' || userRole === 'hr';
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [moreServicesOpen, setMoreServicesOpen] = useState(false);
   const [faceModalOpen, setFaceModalOpen] = useState(false);
   const [currentRoute, setCurrentRoute] = useState('Dashboard');
@@ -141,25 +160,26 @@ const MainAppFlowScreen = ({ navigation }) => {
             <CustomHeader
               title={
                 route.name === 'Dashboard' ? 'Techno HRMS' :
-                route.name === 'EmployeeList' ? 'Employees Directory' :
-                route.name === 'EmployeeDetail' ? 'Employee Profile' :
-                route.name === 'AddEmployee' ? 'Onboard Employee' :
-                route.name === 'DailyAttendance' ? 'Punch History' :
-                route.name === 'PayrollWizard' ? 'Payroll Setup Wizard' :
-                route.name === 'ProcessPayroll' ? 'Payroll & Payslips' :
-                route.name === 'LeaveManagement' ? 'Leave Approvals' :
-                route.name === 'MissPunchRequest' ? 'Miss Punch Requests' :
-                route.name === 'AttendanceCorrection' ? 'Attendance Correction' :
-                route.name === 'BulkAttendance' ? 'Bulk Mark Attendance' :
-                route.name === 'AdvanceLoan' ? 'Advance & Loans' :
-                route.name === 'ExpenseClaim' ? 'Expense Claims' :
-                route.name === 'AssetManagement' ? 'Asset Management' :
-                route.name === 'EssDashboard' ? 'Employee Self Service' :
-                route.name === 'Reports' ? 'Reports & Exports' :
-                route.name === 'Masters' ? 'Masters Setup' :
-                route.name === 'CompanyProfile' ? 'Company Setup' : 'Techno HRMS'
+                  route.name === 'EmployeeList' ? 'Employees Directory' :
+                    route.name === 'EmployeeDetail' ? 'Employee Profile' :
+                      route.name === 'AddEmployee' ? 'Onboard Employee' :
+                        route.name === 'DailyAttendance' ? 'Punch History' :
+                          route.name === 'PayrollWizard' ? 'Payroll Setup Wizard' :
+                            route.name === 'ProcessPayroll' ? 'Payroll & Payslips' :
+                              route.name === 'LeaveManagement' ? 'Leave Approvals' :
+                                route.name === 'MissPunchRequest' ? 'Miss Punch Requests' :
+                                  route.name === 'AttendanceCorrection' ? 'Attendance Correction' :
+                                    route.name === 'BulkAttendance' ? 'Bulk Mark Attendance' :
+                                      route.name === 'AdvanceLoan' ? 'Advance & Loans' :
+                                        route.name === 'ExpenseClaim' ? 'Expense Claims' :
+                                          route.name === 'AssetManagement' ? 'Asset Management' :
+                                            route.name === 'EssDashboard' ? 'Employee Self Service' :
+                                              route.name === 'Reports' ? 'Reports & Exports' :
+                                                route.name === 'Masters' ? 'Masters Setup' :
+                                                  route.name === 'CompanyProfile' ? 'Company Setup' : 'Techno HRMS'
               }
               navigation={navigation}
+              showWizard={isAdminOrHR}
             />
           ),
         })}
@@ -179,6 +199,7 @@ const MainAppFlowScreen = ({ navigation }) => {
         <Stack.Screen name="ExpenseClaim" component={ExpenseClaimScreen} />
         <Stack.Screen name="AssetManagement" component={AssetManagementScreen} />
         <Stack.Screen name="EssDashboard" component={EssDashboardScreen} />
+        <Stack.Screen name="DocumentUpload" component={DocumentUploadScreen} />
         <Stack.Screen name="Reports" component={ReportsScreen} />
         <Stack.Screen name="Masters" component={MastersScreen} />
         <Stack.Screen name="CompanyProfile" component={CompanyProfileScreen} />
@@ -189,6 +210,7 @@ const MainAppFlowScreen = ({ navigation }) => {
         activeRoute={currentRoute}
         onNavigate={handleNavigate}
         onOpenPunchModal={() => setFaceModalOpen(true)}
+        onOpenDrawer={() => setDrawerOpen(true)}
         onOpenMoreModal={() => setMoreServicesOpen(true)}
       />
 

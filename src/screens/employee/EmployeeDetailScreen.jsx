@@ -173,10 +173,7 @@ export const EmployeeDetailScreen = ({ route, navigation }) => {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header Actions */}
       <View style={styles.headerNav}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={20} color={COLORS.primary} />
-          <Text style={styles.backText}>Back to Directory</Text>
-        </TouchableOpacity>
+        <View />
 
         <View style={styles.actionHeaderBtns}>
           <TouchableOpacity style={styles.editBtn} onPress={openEditModal}>

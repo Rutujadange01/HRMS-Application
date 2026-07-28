@@ -4,6 +4,7 @@ import { employeeService } from '../services/employeeService';
 import { attendanceService } from '../services/attendanceService';
 import { seedService } from '../services/seedService';
 import { locationService } from '../services/locationService';
+import { salaryComponentService } from '../services/salaryComponentService';
 import { INITIAL_MISSPUNCH, INITIAL_CORRECTIONS, INITIAL_EXPENSES } from '../utils/seedData';
 
 export const HRMSContext = createContext();
@@ -11,6 +12,9 @@ export const HRMSContext = createContext();
 export const HRMSProvider = ({ children }) => {
   const [company, setCompany] = useState(null);
   const [departments, setDepartments] = useState([]);
+  const [shifts, setShifts] = useState([]);
+  const [holidays, setHolidays] = useState([]);
+  const [salaryComponents, setSalaryComponents] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [leaves, setLeaves] = useState([]);
@@ -32,11 +36,14 @@ export const HRMSProvider = ({ children }) => {
       // Subscribe to real-time Cloud Firestore updates
       const unsubCompany = companyService.subscribeCompany((data) => setCompany(data));
       const unsubDepts = companyService.subscribeDepartments((data) => setDepartments(data));
+      const unsubShifts = companyService.subscribeShifts((data) => setShifts(data));
+      const unsubHolidays = companyService.subscribeHolidays((data) => setHolidays(data));
+      const unsubSalaryComponents = salaryComponentService.subscribeSalaryComponents((data) => setSalaryComponents(data));
       const unsubEmps = employeeService.subscribeEmployees((data) => setEmployees(data));
       const unsubAtt = attendanceService.subscribeAttendance((data) => setAttendanceLogs(data));
       const unsubLeaves = attendanceService.subscribeLeaves((data) => setLeaves(data));
 
-      unsubs = [unsubCompany, unsubDepts, unsubEmps, unsubAtt, unsubLeaves];
+      unsubs = [unsubCompany, unsubDepts, unsubShifts, unsubHolidays, unsubSalaryComponents, unsubEmps, unsubAtt, unsubLeaves];
       setLoading(false);
     };
 
@@ -74,6 +81,46 @@ export const HRMSProvider = ({ children }) => {
   // Delete Department from Firestore
   const deleteDepartment = async (id) => {
     await companyService.deleteDepartment(id);
+  };
+
+  const updateDepartment = async (id, updatedFields) => {
+    await companyService.updateDepartment(id, updatedFields);
+  };
+
+  const addShift = async (shift) => {
+    await companyService.addShift(shift);
+  };
+
+  const updateShift = async (id, updatedFields) => {
+    await companyService.updateShift(id, updatedFields);
+  };
+
+  const deleteShift = async (id) => {
+    await companyService.deleteShift(id);
+  };
+
+  const addHoliday = async (holiday) => {
+    await companyService.addHoliday(holiday);
+  };
+
+  const updateHoliday = async (id, updatedFields) => {
+    await companyService.updateHoliday(id, updatedFields);
+  };
+
+  const deleteHoliday = async (id) => {
+    await companyService.deleteHoliday(id);
+  };
+
+  const addSalaryComponent = async (component) => {
+    await salaryComponentService.addSalaryComponent(component);
+  };
+
+  const updateSalaryComponent = async (id, updatedFields) => {
+    await salaryComponentService.updateSalaryComponent(id, updatedFields);
+  };
+
+  const deleteSalaryComponent = async (id) => {
+    await salaryComponentService.deleteSalaryComponent(id);
   };
 
   // Add Employee to Firestore
@@ -430,7 +477,20 @@ export const HRMSProvider = ({ children }) => {
         lastClockInTime,
         updateCompany,
         addDepartment,
+        updateDepartment,
         deleteDepartment,
+        shifts,
+        addShift,
+        updateShift,
+        deleteShift,
+        holidays,
+        addHoliday,
+        updateHoliday,
+        deleteHoliday,
+        salaryComponents,
+        addSalaryComponent,
+        updateSalaryComponent,
+        deleteSalaryComponent,
         addEmployee,
         updateEmployee,
         deleteEmployee,

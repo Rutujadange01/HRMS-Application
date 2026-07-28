@@ -395,6 +395,7 @@ const styles = StyleSheet.create({
   },
   logLeft: {
     gap: 2,
+    flex: 1,
   },
   logEmpName: {
     fontSize: 14,

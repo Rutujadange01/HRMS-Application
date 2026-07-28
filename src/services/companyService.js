@@ -54,6 +54,54 @@ export const companyService = {
     }
   },
 
+  // Subscribe to real-time Shifts directly from Firestore
+  subscribeShifts: (onUpdate) => {
+    if (!db) {
+      onUpdate([]);
+      return () => {};
+    }
+
+    try {
+      const colRef = collection(db, 'shifts');
+      const unsubscribe = onSnapshot(colRef, (snapshot) => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        onUpdate(list);
+      }, (error) => {
+        console.warn("Shifts onSnapshot listener error:", error.message);
+        onUpdate([]);
+      });
+      return unsubscribe;
+    } catch (error) {
+      console.warn("Failed to subscribe to shifts:", error.message);
+      onUpdate([]);
+      return () => {};
+    }
+  },
+
+  // Subscribe to real-time Holidays directly from Firestore
+  subscribeHolidays: (onUpdate) => {
+    if (!db) {
+      onUpdate([]);
+      return () => {};
+    }
+
+    try {
+      const colRef = collection(db, 'holidays');
+      const unsubscribe = onSnapshot(colRef, (snapshot) => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        onUpdate(list);
+      }, (error) => {
+        console.warn("Holidays onSnapshot listener error:", error.message);
+        onUpdate([]);
+      });
+      return unsubscribe;
+    } catch (error) {
+      console.warn("Failed to subscribe to holidays:", error.message);
+      onUpdate([]);
+      return () => {};
+    }
+  },
+
   // One-time Get Company Details from Firestore
   getCompanyDetails: async () => {
     try {
@@ -142,6 +190,115 @@ export const companyService = {
       }
     } catch (error) {
       console.warn("Delete department error:", error.message);
+      throw error;
+    }
+    return id;
+  },
+
+  // Update Department directly in Firestore
+  updateDepartment: async (id, deptData) => {
+    try {
+      if (db && id) {
+        await updateDoc(doc(db, 'departments', id), deptData);
+      }
+    } catch (error) {
+      console.warn("Update department error:", error.message);
+      throw error;
+    }
+    return id;
+  },
+
+  // Add Shift directly to Firestore
+  addShift: async (shiftData) => {
+    const shiftId = shiftData.ShiftID || shiftData.id || ('sh_' + Date.now());
+    const payload = {
+      ShiftID: shiftId,
+      id: shiftId,
+      CompanyID: 'comp_01',
+      IsActive: true,
+      CreatedDate: new Date().toISOString(),
+      ...shiftData
+    };
+
+    try {
+      if (db) {
+        await setDoc(doc(db, 'shifts', shiftId), payload);
+      }
+    } catch (error) {
+      console.warn("Add shift error:", error.message);
+      throw error;
+    }
+    return payload;
+  },
+
+  // Update Shift directly in Firestore
+  updateShift: async (id, shiftData) => {
+    try {
+      if (db && id) {
+        await updateDoc(doc(db, 'shifts', id), shiftData);
+      }
+    } catch (error) {
+      console.warn("Update shift error:", error.message);
+      throw error;
+    }
+    return id;
+  },
+
+  // Delete Shift directly from Firestore
+  deleteShift: async (id) => {
+    try {
+      if (db && id) {
+        await deleteDoc(doc(db, 'shifts', id));
+      }
+    } catch (error) {
+      console.warn("Delete shift error:", error.message);
+      throw error;
+    }
+    return id;
+  },
+
+  // Add Holiday directly to Firestore
+  addHoliday: async (holidayData) => {
+    const holId = holidayData.id || ('hol_' + Date.now());
+    const payload = {
+      id: holId,
+      CompanyID: 'comp_01',
+      CreatedDate: new Date().toISOString(),
+      ...holidayData
+    };
+
+    try {
+      if (db) {
+        await setDoc(doc(db, 'holidays', holId), payload);
+      }
+    } catch (error) {
+      console.warn("Add holiday error:", error.message);
+      throw error;
+    }
+    return payload;
+  },
+
+  // Update Holiday directly in Firestore
+  updateHoliday: async (id, holidayData) => {
+    try {
+      if (db && id) {
+        await updateDoc(doc(db, 'holidays', id), holidayData);
+      }
+    } catch (error) {
+      console.warn("Update holiday error:", error.message);
+      throw error;
+    }
+    return id;
+  },
+
+  // Delete Holiday directly from Firestore
+  deleteHoliday: async (id) => {
+    try {
+      if (db && id) {
+        await deleteDoc(doc(db, 'holidays', id));
+      }
+    } catch (error) {
+      console.warn("Delete holiday error:", error.message);
       throw error;
     }
     return id;

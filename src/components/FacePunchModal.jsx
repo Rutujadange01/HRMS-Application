@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, ActivityIndicator, Alert, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import { HRMSContext } from '../context/HRMSContext';
 import { COLORS } from '../constants/theme';
@@ -191,9 +192,9 @@ export const FacePunchModal = ({ visible, onClose }) => {
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalBg}>
-        <View style={styles.modalCard}>
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={styles.fullScreenContainer}>
+        <View style={styles.contentWrapper}>
           {/* Header */}
           <View style={styles.headerRow}>
             <View>
@@ -309,25 +310,20 @@ export const FacePunchModal = ({ visible, onClose }) => {
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalBg: {
+  fullScreenContainer: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 18,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 380,
     backgroundColor: COLORS.cardBg,
-    borderRadius: 22,
-    padding: 20,
+  },
+  contentWrapper: {
+    flex: 1,
+    padding: 24,
+    paddingTop: 40,
     alignItems: 'center',
   },
   headerRow: {
@@ -382,9 +378,9 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   viewfinderFrame: {
-    width: 170,
-    height: 170,
-    borderRadius: 85,
+    width: '100%',
+    height: 320,
+    borderRadius: 20,
     borderWidth: 3,
     borderColor: COLORS.primary,
     overflow: 'hidden',
@@ -392,7 +388,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#0f172a',
     position: 'relative',
-    marginVertical: 10,
+    marginVertical: 14,
   },
   scannerFaceImg: {
     width: '100%',
@@ -414,14 +410,14 @@ const styles = StyleSheet.create({
   },
   hudCorner: {
     position: 'absolute',
-    width: 16,
-    height: 16,
+    width: 24,
+    height: 24,
     borderColor: COLORS.primary,
   },
-  cornerTL: { top: 12, left: 12, borderTopWidth: 3, borderLeftWidth: 3 },
-  cornerTR: { top: 12, right: 12, borderTopWidth: 3, borderRightWidth: 3 },
-  cornerBL: { bottom: 12, left: 12, borderBottomWidth: 3, borderLeftWidth: 3 },
-  cornerBR: { bottom: 12, right: 12, borderBottomWidth: 3, borderRightWidth: 3 },
+  cornerTL: { top: 16, left: 16, borderTopWidth: 4, borderLeftWidth: 4 },
+  cornerTR: { top: 16, right: 16, borderTopWidth: 4, borderRightWidth: 4 },
+  cornerBL: { bottom: 16, left: 16, borderBottomWidth: 4, borderLeftWidth: 4 },
+  cornerBR: { bottom: 16, right: 16, borderBottomWidth: 4, borderRightWidth: 4 },
   scanStatusBox: {
     flexDirection: 'row',
     alignItems: 'center',

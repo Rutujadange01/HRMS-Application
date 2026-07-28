@@ -233,50 +233,10 @@ export const AddEmployeeScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <ArrowLeft size={20} color={COLORS.primary} />
-        <Text style={styles.backText}>Back to Roster</Text>
-      </TouchableOpacity>
-
       <Text style={styles.screenTitle}>Onboard Employee</Text>
       <Text style={styles.screenSub}>Employee Onboarding & Account Registration</Text>
 
-      {/* Profile Photo / Face Capture Selection */}
-      <View style={styles.card}>
-        <Text style={styles.sectionHeader}>📷 Employee Profile Photo / Face Capture</Text>
-        
-        <View style={styles.avatarPickerRow}>
-          <Image source={{ uri: selectedAvatar }} style={styles.previewAvatar} />
-          <View style={styles.avatarPickerMeta}>
-            <Text style={styles.avatarPickerTitle}>Enrolled Face Profile Photo</Text>
-            <Text style={styles.avatarPickerSub}>Stored for Face Recognition Verification</Text>
-          </View>
-        </View>
 
-        {/* Live Face Detection Camera Button */}
-        <TouchableOpacity style={styles.faceTriggerBtn} onPress={() => openCameraModal(true)}>
-          <ScanFace size={20} color="#ffffff" />
-          <Text style={styles.faceTriggerText}>📷 Face Scan & Capture Live Photo</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.cameraTriggerBtn} onPress={() => openCameraModal(false)}>
-          <Camera size={18} color="#ffffff" />
-          <Text style={styles.cameraTriggerText}>📷 Standard Mobile Camera Snapshot</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.presetLabel}>Or choose from Preset Avatars:</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetScroll}>
-          {AVATAR_PRESETS.map((url, idx) => (
-            <TouchableOpacity 
-              key={idx} 
-              onPress={() => setSelectedAvatar(url)} 
-              style={[styles.presetItem, selectedAvatar === url && styles.presetItemActive]}
-            >
-              <Image source={{ uri: url }} style={styles.presetImg} />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionHeader}>1. Personal Identity & Account</Text>

@@ -1,15 +1,17 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
+import { storage } from '../../config/firebase';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { HRMSContext } from '../../context/HRMSContext';
 import { COLORS } from '../../constants/theme';
-import { 
-  UserCheck, 
-  Clock, 
-  IndianRupee, 
-  Calendar, 
-  CreditCard, 
-  Upload, 
+import {
+  UserCheck,
+  Clock,
+  IndianRupee,
+  Calendar,
+  CreditCard,
+  Upload,
   ChevronRight,
   Camera,
   ScanFace,
@@ -104,11 +106,11 @@ export const EssDashboardScreen = ({ navigation }) => {
           canvas.width = videoEl.videoWidth || 360;
           canvas.height = videoEl.videoHeight || 360;
           const ctx = canvas.getContext('2d');
-          
+
           // Mirror horizontally for selfie webcam view
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
-          
+
           ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
           livePhotoUrl = canvas.toDataURL('image/jpeg', 0.90);
         }
@@ -132,10 +134,15 @@ export const EssDashboardScreen = ({ navigation }) => {
       return;
     }
     try {
+      // Upload captured photo (base64 data URL) to Firebase Storage
+      const storageRef = ref(storage, `uphotos/${profile?.uid || profile?.UserID || 'unknown'}/${Date.now()}.jpg`);
+      await uploadString(storageRef, capturedPhoto, 'data_url');
+      const downloadURL = await getDownloadURL(storageRef);
+
       const targetEmpId = currentEmpRecord?.id || currentEmpRecord?.UserID || profile?.uid || profile?.UserID || profile?.id || 'emp_001';
       const updatedFields = {
-        UPhoto: capturedPhoto,
-        avatar: capturedPhoto,
+        UPhoto: downloadURL,
+        avatar: downloadURL,
         UpdatedOn: new Date().toISOString(),
       };
 
@@ -158,11 +165,7 @@ export const EssDashboardScreen = ({ navigation }) => {
 
   const essActions = [
     { label: 'Register & Store Biometric UPhoto', icon: ScanFace, isUPhotoTrigger: true },
-    { label: 'View Attendance History', icon: Clock, route: 'DailyAttendance' },
-    { label: 'View Salary & Payslips', icon: IndianRupee, route: 'ProcessPayroll' },
-    { label: 'Apply Leave Request', icon: Calendar, route: 'LeaveManagement' },
-    { label: 'Request Salary Advance', icon: CreditCard, route: 'AdvanceLoan' },
-    { label: 'Upload Documents (Aadhaar/PAN)', icon: Upload, route: 'EmployeeList' },
+    { label: 'Upload Documents (Aadhaar/PAN)', icon: Upload, route: 'DocumentUpload' },
     { label: 'My Assigned Assets', icon: UserCheck, route: 'AssetManagement' },
   ];
 
@@ -171,9 +174,9 @@ export const EssDashboardScreen = ({ navigation }) => {
       {/* Profile ESS Header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatarWrapper}>
-          <Image 
-            source={{ uri: currentUPhoto }} 
-            style={styles.avatar} 
+          <Image
+            source={{ uri: currentUPhoto }}
+            style={styles.avatar}
           />
           <TouchableOpacity style={styles.cameraBadgeBtn} onPress={openCameraModal}>
             <Camera size={14} color="#ffffff" />
@@ -198,9 +201,9 @@ export const EssDashboardScreen = ({ navigation }) => {
       {essActions.map((item, index) => {
         const IconC = item.icon;
         return (
-          <TouchableOpacity 
-            key={index} 
-            style={styles.essCard} 
+          <TouchableOpacity
+            key={index}
+            style={styles.essCard}
             onPress={() => {
               if (item.isUPhotoTrigger) {
                 openCameraModal();
@@ -249,7 +252,7 @@ export const EssDashboardScreen = ({ navigation }) => {
                     videoRef.current = node;
                     if (node && streamRef.current && node.srcObject !== streamRef.current) {
                       node.srcObject = streamRef.current;
-                      node.play().catch(() => {});
+                      node.play().catch(() => { });
                     }
                   }}
                   autoPlay
