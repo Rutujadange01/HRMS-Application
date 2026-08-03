@@ -1,0 +1,236 @@
+export const INITIAL_COMPANY = {
+  CompanyID: 'comp_01',
+  CompanyCode: 'CMP100',
+  CompanyName: 'Technosync Innovation',
+  Address1: '200 Tech Park Way, Suite 400, Tech City, CA',
+  PhoneNo: '+1 (555) 019-2831',
+  Email: 'hr@technosync.com',
+  OfficeStartTime: '09:00 AM',
+  OfficeEndTime: '06:00 PM',
+  GraceMinutes: '15',
+  FullDayHours: '8',
+  SalaryCycleDay: '25',
+  GeoFenceRequired: true,
+  PhotoRequired: true,
+  WeekOffDay: 'Sunday',
+  IsActive: true,
+  CreatedOn: '2026-07-23T13:34:58.000Z',
+  Location: 'Tech Park HQ Tower 1',
+  Latitude: '37.7749',
+  Longitude: '-122.4194',
+  GeoFenceRadius: '100',
+  CreatedByUId: 'demo_admin_123'
+};
+
+// SSMS Table: Master_DepartmentMaster
+export const INITIAL_DEPARTMENTS = [
+  {
+    DepartmentID: 'dept_01',
+    id: 'dept_01',
+    DepartmentName: 'Engineering & Tech',
+    name: 'Engineering & Tech',
+    CompanyID: 'comp_01',
+    ShortName: 'ENG',
+    code: 'ENG',
+    Description: 'Software Development & Architecture',
+    IsActive: true,
+    CreatedByUId: 'demo_admin_123',
+    CreatedByUName: 'Sarah Jenkins',
+    CreatedDate: '2026-01-10T00:00:00.000Z',
+    head: 'Alex Rivers',
+    employeeCount: 14
+  },
+  {
+    DepartmentID: 'dept_02',
+    id: 'dept_02',
+    DepartmentName: 'Human Resources',
+    name: 'Human Resources',
+    CompanyID: 'comp_01',
+    ShortName: 'HR',
+    code: 'HR',
+    Description: 'People Operations & Recruitment',
+    IsActive: true,
+    CreatedByUId: 'demo_admin_123',
+    CreatedByUName: 'Sarah Jenkins',
+    CreatedDate: '2026-01-10T00:00:00.000Z',
+    head: 'Sarah Jenkins',
+    employeeCount: 5
+  },
+  {
+    DepartmentID: 'dept_03',
+    id: 'dept_03',
+    DepartmentName: 'Sales & Business',
+    name: 'Sales & Business',
+    CompanyID: 'comp_01',
+    ShortName: 'SALES',
+    code: 'SALES',
+    Description: 'Business Development & Enterprise Accounts',
+    IsActive: true,
+    CreatedByUId: 'demo_admin_123',
+    CreatedByUName: 'Sarah Jenkins',
+    CreatedDate: '2026-01-10T00:00:00.000Z',
+    head: 'Michael Chang',
+    employeeCount: 10
+  }
+];
+
+// SSMS Table: Users (Employees Roster)
+export const INITIAL_EMPLOYEES = [
+  {
+    CompanyID: 'comp_01',
+    UserID: 'emp_001',
+    id: 'emp_001',
+    UserCode: 'USR101',
+    Username: 'sarah.j',
+    PasswordHash: 'scrypt:salted_pass_123',
+    Role: 'Admin',
+    role: 'Admin',
+    FullName: 'Sarah Jenkins',
+    name: 'Sarah Jenkins',
+    Email: 'sarah.j@acmeenterprise.com',
+    email: 'sarah.j@acmeenterprise.com',
+    DOJ: '2021-03-15',
+    joiningDate: '2021-03-15',
+    DOR: '',
+    DOB: '1992-07-25',
+    DepartmentID: 'dept_02',
+    department: 'Human Resources',
+    MobileNo: '+1 (555) 234-5678',
+    phone: '+1 (555) 234-5678',
+    AdharNo: '9874-5612-3012',
+    PanNo: 'ABCDE1234F',
+    UANNo: '100987654321',
+    Designation: 'VP of People Operations',
+    designation: 'VP of People Operations',
+    InTime: '09:00 AM',
+    OutTime: '06:00 PM',
+    IsActive: true,
+    CreatedOn: '2021-03-15T00:00:00.000Z',
+    CreatedUserID: 'demo_admin_123',
+    UPhoto: 'https://ui-avatars.com/api/?name=Sarah+Jenkins&background=F15E8C&color=fff',
+    avatar: 'https://ui-avatars.com/api/?name=Sarah+Jenkins&background=F15E8C&color=fff',
+    Status: 'Active',
+    status: 'Active',
+    Gender: 'Female',
+    Location: 'Tech Park HQ Tower 1',
+    EmploymentType: 'Full-Time',
+    ShiftID: 'sh_01',
+    MonthlyPayAmt: 85000,
+    salaryTier: '₹85,000 / mo',
+    WorkHrs: 8,
+    IsPerDay: false
+  },
+  {
+    CompanyID: 'comp_01',
+    UserID: 'emp_002',
+    id: 'emp_002',
+    UserCode: 'USR102',
+    Username: 'alex.r',
+    PasswordHash: 'scrypt:salted_pass_123',
+    Role: 'Manager',
+    role: 'Manager',
+    FullName: 'Alex Rivers',
+    name: 'Alex Rivers',
+    Email: 'alex.r@acmeenterprise.com',
+    email: 'alex.r@acmeenterprise.com',
+    DOJ: '2022-01-10',
+    joiningDate: '2022-01-10',
+    DOR: '',
+    DOB: '1988-11-22',
+    DepartmentID: 'dept_01',
+    department: 'Engineering & Tech',
+    MobileNo: '+1 (555) 345-6789',
+    phone: '+1 (555) 345-6789',
+    AdharNo: '8765-4321-9012',
+    PanNo: 'FGHIJ5678K',
+    UANNo: '100987654322',
+    Designation: 'Lead Software Architect',
+    designation: 'Lead Software Architect',
+    InTime: '09:00 AM',
+    OutTime: '06:00 PM',
+    IsActive: true,
+    CreatedOn: '2022-01-10T00:00:00.000Z',
+    CreatedUserID: 'demo_admin_123',
+    UPhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    Status: 'Active',
+    status: 'Active',
+    Gender: 'Male',
+    Location: 'Tech Park HQ Tower 1',
+    EmploymentType: 'Full-Time',
+    ShiftID: 'sh_01',
+    MonthlyPayAmt: 95000,
+    salaryTier: '₹95,000 / mo',
+    WorkHrs: 8,
+    IsPerDay: false
+  }
+];
+
+// SSMS Table: Master_ShiftMaster
+export const INITIAL_SHIFTS = [
+  {
+    ShiftID: 'sh_01',
+    id: 'sh_01',
+    ShiftName: 'General Morning Shift',
+    name: 'General Morning Shift',
+    ShortName: 'GEN',
+    StartTime: '09:00 AM',
+    start: '09:00 AM',
+    EndTime: '06:00 PM',
+    end: '06:00 PM',
+    Break1StartTime: '01:00 PM',
+    Break1EndTime: '02:00 PM',
+    Break2StartTime: '04:00 PM',
+    Break2EndTime: '04:15 PM',
+    PunchBeginBefore_Min: 30,
+    PunchEndAfter_Min: 60,
+    GraceTime_Min: 15,
+    grace: '15 mins',
+    IsActive: true,
+    CompanyID: 'comp_01',
+    CreatedByUId: 'demo_admin_123',
+    CreatedByUName: 'Sarah Jenkins',
+    CreatedDate: '2026-01-10T00:00:00.000Z'
+  },
+  {
+    ShiftID: 'sh_02',
+    id: 'sh_02',
+    ShiftName: 'Night Shift',
+    name: 'Night Shift',
+    ShortName: 'NIGHT',
+    StartTime: '09:00 PM',
+    start: '09:00 PM',
+    EndTime: '06:00 AM',
+    end: '06:00 AM',
+    Break1StartTime: '01:00 AM',
+    Break1EndTime: '02:00 AM',
+    Break2StartTime: '',
+    Break2EndTime: '',
+    PunchBeginBefore_Min: 30,
+    PunchEndAfter_Min: 60,
+    GraceTime_Min: 15,
+    grace: '15 mins',
+    IsActive: true,
+    CompanyID: 'comp_01',
+    CreatedByUId: 'demo_admin_123',
+    CreatedByUName: 'Sarah Jenkins',
+    CreatedDate: '2026-01-10T00:00:00.000Z'
+  }
+];
+
+// SSMS Table: AttendancePunch (Starts empty - populates via real-time Punch IN / OUT actions)
+export const INITIAL_ATTENDANCE = [];
+
+// SSMS Table: Leave Applications (Starts empty - populates via real-time Leave requests)
+export const INITIAL_LEAVES = [];
+
+// SSMS Table: Emp_MissPunch (Starts empty - populates via real-time Miss Punch requests)
+export const INITIAL_MISSPUNCH = [];
+
+// SSMS Table: Attendance_CorrectionRequests (Starts empty - populates via real-time Correction requests)
+export const INITIAL_CORRECTIONS = [];
+
+// SSMS Table: Emp_ExpenseClaims (Starts empty - populates via real-time Expense Claims)
+export const INITIAL_EXPENSES = [];
+
+
