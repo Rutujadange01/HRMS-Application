@@ -17,23 +17,68 @@ export const AdvanceLoanScreen = () => {
   const profUid = (profile?.uid || profile?.UserID || profile?.id || '').trim().toLowerCase();
   const profName = (profile?.name || profile?.FullName || '').trim().toLowerCase();
 
-  const displayedLoans = isEmployee
-    ? (loans || []).filter(l => {
-        const lUid = (l.employeeId || l.UserID || '').trim().toLowerCase();
-        const lName = (l.employeeName || l.UserName || '').trim().toLowerCase();
-        return (profUid && lUid === profUid) || (profName && lName === profName);
-      })
-    : (loans || []);
+  const displayedLoans = (loans || []).filter(l => {
+    const lUid = (l.employeeId || l.UserID || '').trim().toLowerCase();
+    const lName = (l.employeeName || l.UserName || '').trim().toLowerCase();
+    return (profUid && lUid === profUid) || (profName && lName === profName);
+  });
+
+  const pendingApprovalsCount = (loans || []).filter(l => {
+    const currentStatus = l.status || l.Status;
+    if (currentStatus !== 'Pending') return false;
+    const reqEmpId = String(l.employeeId || l.UserID || '').toLowerCase().trim();
+    const reqEmp = employees.find(e => String(e.id || e.UserID || '').toLowerCase().trim() === reqEmpId);
+    const reqReportingTo = String(reqEmp?.reportingTo || reqEmp?.ReportingTo || '').toLowerCase().trim();
+    return reqReportingTo === profUid;
+  }).length;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [type, setType] = useState('Salary Advance'); // Salary Advance | Personal Loan
+  const [deductionType, setDeductionType] = useState('Monthly'); // One time | Monthly
   const [amount, setAmount] = useState('');
-  const [emi, setEmi] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [noOfInstallments, setNoOfInstallments] = useState('');
+  
+  const calculatedInstallment = (Number(amount) && Number(noOfInstallments) > 0)
+    ? (Number(amount) / Number(noOfInstallments)).toFixed(2)
+    : '';
+
   const [selectedEmp, setSelectedEmp] = useState(profile?.name || profile?.FullName || employees[0]?.name || 'Alex Rivers');
 
+  const [approveModalVisible, setApproveModalVisible] = useState(false);
+  const [selectedRequestToApprove, setSelectedRequestToApprove] = useState(null);
+  const [approvedAmount, setApprovedAmount] = useState('');
+  const [startMonth, setStartMonth] = useState('');
+  const [startYear, setStartYear] = useState('');
+  const [remarks, setRemarks] = useState('');
+
+  const handleApproveSubmit = () => {
+    if (!approvedAmount || !startMonth || !startYear) {
+      Alert.alert("Missing Fields", "Please fill approved amount, start month and year.");
+      return;
+    }
+    updateLoanStatus(selectedRequestToApprove.id, {
+      status: 'Approved',
+      Status: 'Approved',
+      ApprovedAmount: Number(approvedAmount),
+      StartMonth: startMonth,
+      StartYear: startYear,
+      Remarks: remarks,
+      ApprovedBy: profile?.name || profile?.FullName || 'Manager',
+      ApprovedDate: new Date().toISOString().split('T')[0],
+    });
+    setApproveModalVisible(false);
+    setSelectedRequestToApprove(null);
+    setApprovedAmount('');
+    setStartMonth('');
+    setStartYear('');
+    setRemarks('');
+    Alert.alert("Success", "Request has been approved successfully.");
+  };
+
   const handleApply = () => {
-    if (!amount || !emi) {
-      Alert.alert("Missing Fields", "Please enter requested amount and EMI deduction.");
+    if (!amount || !purpose || (deductionType === 'Monthly' && !noOfInstallments)) {
+      Alert.alert("Missing Fields", "Please fill all required fields.");
       return;
     }
 
@@ -41,13 +86,18 @@ export const AdvanceLoanScreen = () => {
       employeeId: profile?.uid || profile?.UserID || ('emp_' + Date.now()),
       employeeName: isEmployee ? (profile?.name || profile?.FullName || 'Employee') : selectedEmp,
       type,
+      deductionType,
       amount: Number(amount),
-      emi: Number(emi)
+      purpose,
+      noOfInstallments: deductionType === 'Monthly' ? Number(noOfInstallments) : 1,
+      emi: deductionType === 'Monthly' ? Number(calculatedInstallment) : Number(amount),
+      requestDate: new Date().toISOString().split('T')[0],
     });
 
     setModalVisible(false);
     setAmount('');
-    setEmi('');
+    setPurpose('');
+    setNoOfInstallments('');
     Alert.alert("Request Submitted", "Salary advance request submitted for manager approval.");
   };
 
@@ -57,14 +107,25 @@ export const AdvanceLoanScreen = () => {
       <View style={styles.headerCard}>
         <View style={styles.headerRow}>
           <CreditCard size={24} color={COLORS.primary} />
-          <Text style={styles.headerTitle}>{isEmployee ? 'My Salary Advance & Loans' : 'Salary Advance & Loans'}</Text>
+          <Text style={styles.headerTitle}>Salary Advance & Loans</Text>
         </View>
-        <Text style={styles.headerSub}>{isEmployee ? 'Request salary advance and track monthly EMI deductions.' : 'Manage employee advances, loans, and automated monthly EMI deductions.'}</Text>
+        <Text style={styles.headerSub}>Request salary advance and track monthly EMI deductions.</Text>
 
-        <TouchableOpacity style={styles.applyBtn} onPress={() => setModalVisible(true)}>
-          <PlusCircle size={18} color="#ffffff" />
-          <Text style={styles.applyBtnText}>Request Salary Advance / Loan</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtonsRow}>
+          <TouchableOpacity style={[styles.applyBtn, styles.flexBtn]} onPress={() => setModalVisible(true)}>
+            <PlusCircle size={18} color="#ffffff" />
+            <Text style={styles.applyBtnText}>Request</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.applyBtn, styles.flexBtn, styles.approveMainBtn]} 
+            onPress={() => {
+              setSelectedRequestToApprove(null);
+              setApproveModalVisible(true);
+            }}
+          >
+            <Text style={styles.applyBtnText}>Approve Request {pendingApprovalsCount > 0 ? `(${pendingApprovalsCount})` : ''}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Outstanding Balance List */}
@@ -77,17 +138,19 @@ export const AdvanceLoanScreen = () => {
           </Text>
         </View>
       ) : (
-        displayedLoans.map((loan) => (
+        displayedLoans.map((loan) => {
+          const currentStatus = loan.status || loan.Status;
+          return (
           <View key={loan.id} style={styles.loanCard}>
             <View style={styles.cardTop}>
               <View>
-                <Text style={styles.empName}>{loan.employeeName}</Text>
-                <Text style={styles.loanType}>{loan.type} • Applied {loan.requestDate}</Text>
+                <Text style={styles.empName}>{loan.employeeName || loan.CreatedByUName}</Text>
+                <Text style={styles.loanType}>{loan.type || loan.LoanType} • Applied {loan.requestDate || loan.RequestDate}</Text>
               </View>
 
-              <View style={[styles.statusBadge, loan.status === 'Approved' ? styles.badgeApproved : styles.badgePending]}>
-                <Text style={[styles.statusText, loan.status === 'Approved' ? styles.textApproved : styles.textPending]}>
-                  {loan.status}
+              <View style={[styles.statusBadge, currentStatus === 'Approved' ? styles.badgeApproved : styles.badgePending]}>
+                <Text style={[styles.statusText, currentStatus === 'Approved' ? styles.textApproved : styles.textPending]}>
+                  {currentStatus}
                 </Text>
               </View>
             </View>
@@ -95,31 +158,122 @@ export const AdvanceLoanScreen = () => {
             <View style={styles.grid}>
               <View style={styles.gridBox}>
                 <Text style={styles.gLabel}>Total Sanctioned</Text>
-                <Text style={styles.gValue}>₹{loan.amount.toLocaleString('en-IN')}</Text>
+                <Text style={styles.gValue}>₹{(loan.amount || loan.Amount || 0).toLocaleString('en-IN')}</Text>
               </View>
               <View style={styles.gridBox}>
                 <Text style={styles.gLabel}>Monthly EMI</Text>
-                <Text style={styles.gValue}>₹{loan.emi.toLocaleString('en-IN')}/mo</Text>
+                <Text style={styles.gValue}>₹{(loan.emi || loan.InstallmentAmount || 0).toLocaleString('en-IN')}/mo</Text>
               </View>
               <View style={styles.gridBox}>
                 <Text style={styles.gLabel}>Outstanding</Text>
-                <Text style={[styles.gValue, { color: COLORS.danger }]}>₹{loan.balance.toLocaleString('en-IN')}</Text>
+                <Text style={[styles.gValue, { color: COLORS.danger }]}>₹{(loan.balance || loan.BalanceAmount || 0).toLocaleString('en-IN')}</Text>
               </View>
             </View>
 
-            {!isEmployee && loan.status === 'Pending' && (
-              <View style={styles.actionRow}>
-                <TouchableOpacity 
-                  style={styles.approveBtn} 
-                  onPress={() => updateLoanStatus(loan.id, 'Approved')}
-                >
-                  <Text style={styles.approveText}>Approve Request</Text>
-                </TouchableOpacity>
-              </View>
-            )}
           </View>
-        ))
+        )})
       )}
+
+      {/* Approve Modal */}
+      <Modal visible={approveModalVisible} transparent animationType="slide">
+        <View style={styles.modalBg}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Approve Request</Text>
+            
+            {!selectedRequestToApprove ? (
+              <ScrollView style={{maxHeight: 300}}>
+                {(() => {
+                  const pendingRequests = (loans || []).filter(l => {
+                    const currentStatus = l.status || l.Status;
+                    if (currentStatus !== 'Pending') return false;
+                    
+                    const reqEmpId = String(l.employeeId || l.UserID || '').toLowerCase().trim();
+                    const reqEmp = employees.find(e => String(e.id || e.UserID || '').toLowerCase().trim() === reqEmpId);
+                    const reqReportingTo = String(reqEmp?.reportingTo || reqEmp?.ReportingTo || '').toLowerCase().trim();
+                    return reqReportingTo === profUid;
+                  });
+
+                  if (pendingRequests.length === 0) {
+                    return <Text style={{color: COLORS.textSecondary, textAlign: 'center'}}>No pending requests from your team.</Text>;
+                  }
+
+                  return pendingRequests.map(l => (
+                    <TouchableOpacity 
+                      key={l.id} 
+                      style={styles.pendingRequestItem}
+                      onPress={() => {
+                        setSelectedRequestToApprove(l);
+                        setApprovedAmount((l.amount || l.Amount)?.toString() || '');
+                      }}
+                    >
+                      <Text style={styles.empName}>{l.employeeName || l.CreatedByUName}</Text>
+                      <Text style={styles.loanType}>{l.type || l.LoanType} - ₹{l.amount || l.Amount}</Text>
+                    </TouchableOpacity>
+                  ));
+                })()}
+              </ScrollView>
+            ) : (
+              <ScrollView style={{maxHeight: 400}} showsVerticalScrollIndicator={false}>
+                <Text style={styles.inputLabel}>Selected Request</Text>
+                <Text style={{color: COLORS.textPrimary, marginBottom: 10}}>
+                  {selectedRequestToApprove.employeeName} - {selectedRequestToApprove.type} (₹{selectedRequestToApprove.amount})
+                </Text>
+
+                <Text style={styles.inputLabel}>Approved Amount</Text>
+                <TextInput
+                  style={styles.input}
+                  value={approvedAmount}
+                  onChangeText={setApprovedAmount}
+                  keyboardType="numeric"
+                />
+
+                <Text style={styles.inputLabel}>Start Month</Text>
+                <TextInput
+                  style={styles.input}
+                  value={startMonth}
+                  onChangeText={setStartMonth}
+                  placeholder="e.g. 09"
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
+
+                <Text style={styles.inputLabel}>Start Year</Text>
+                <TextInput
+                  style={styles.input}
+                  value={startYear}
+                  onChangeText={setStartYear}
+                  placeholder="e.g. 2026"
+                  keyboardType="numeric"
+                  maxLength={4}
+                />
+
+                <Text style={styles.inputLabel}>Remarks</Text>
+                <TextInput
+                  style={styles.input}
+                  value={remarks}
+                  onChangeText={setRemarks}
+                  placeholder="Enter remarks..."
+                  placeholderTextColor={COLORS.textSecondary}
+                />
+
+                <TouchableOpacity style={styles.submitBtn} onPress={handleApproveSubmit}>
+                  <Text style={styles.submitBtnText}>Approve</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedRequestToApprove(null)}>
+                  <Text style={styles.closeText}>Back to List</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+
+            <TouchableOpacity style={[styles.closeBtn, {marginTop: 10}]} onPress={() => {
+              setApproveModalVisible(false);
+              setSelectedRequestToApprove(null);
+            }}>
+              <Text style={styles.closeText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* New Request Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -127,42 +281,79 @@ export const AdvanceLoanScreen = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Request Salary Advance / Loan</Text>
 
-            <Text style={styles.inputLabel}>Request Type</Text>
-            <View style={styles.typeRow}>
-              {['Salary Advance', 'Personal Loan'].map((t) => (
-                <TouchableOpacity
-                  key={t}
-                  style={[styles.typeBtn, type === t && styles.typeBtnActive]}
-                  onPress={() => setType(t)}
-                >
-                  <Text style={[styles.typeText, type === t && styles.typeTextActive]}>{t}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 10}} style={{maxHeight: 500}}>
+              <Text style={styles.inputLabel}>Request Type</Text>
+              <View style={styles.typeRow}>
+                {['Salary Advance', 'Personal Loan'].map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.typeBtn, type === t && styles.typeBtnActive]}
+                    onPress={() => setType(t)}
+                  >
+                    <Text style={[styles.typeText, type === t && styles.typeTextActive]}>{t}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-            <Text style={styles.inputLabel}>Requested Amount</Text>
-            <TextInput
-              style={styles.input}
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-              placeholder="e.g. 25000"
-              placeholderTextColor={COLORS.textSecondary}
-            />
+              <Text style={styles.inputLabel}>Deduction Type</Text>
+              <View style={styles.typeRow}>
+                {['One time', 'Monthly'].map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.typeBtn, deductionType === t && styles.typeBtnActive]}
+                    onPress={() => setDeductionType(t)}
+                  >
+                    <Text style={[styles.typeText, deductionType === t && styles.typeTextActive]}>{t}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-            <Text style={styles.inputLabel}>Monthly EMI Deduction</Text>
-            <TextInput
-              style={styles.input}
-              value={emi}
-              onChangeText={setEmi}
-              keyboardType="numeric"
-              placeholder="e.g. 5000"
-              placeholderTextColor={COLORS.textSecondary}
-            />
+              <Text style={styles.inputLabel}>Requested Amount</Text>
+              <TextInput
+                style={styles.input}
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="numeric"
+                placeholder="e.g. 25000"
+                placeholderTextColor={COLORS.textSecondary}
+              />
 
-            <TouchableOpacity style={styles.submitBtn} onPress={handleApply}>
-              <Text style={styles.submitBtnText}>Submit Request</Text>
-            </TouchableOpacity>
+              <Text style={styles.inputLabel}>Purpose</Text>
+              <TextInput
+                style={styles.input}
+                value={purpose}
+                onChangeText={setPurpose}
+                placeholder="Enter purpose"
+                placeholderTextColor={COLORS.textSecondary}
+              />
+
+              {deductionType === 'Monthly' && (
+                <>
+                  <Text style={styles.inputLabel}>No. of Installments</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={noOfInstallments}
+                    onChangeText={setNoOfInstallments}
+                    keyboardType="numeric"
+                    placeholder="e.g. 5"
+                    placeholderTextColor={COLORS.textSecondary}
+                  />
+
+                  <Text style={styles.inputLabel}>Installment Amount</Text>
+                  <TextInput
+                    style={[styles.input, {backgroundColor: COLORS.background, color: COLORS.textSecondary}]}
+                    value={calculatedInstallment}
+                    editable={false}
+                    placeholder="Calculated automatically"
+                    placeholderTextColor={COLORS.textSecondary}
+                  />
+                </>
+              )}
+
+              <TouchableOpacity style={styles.submitBtn} onPress={handleApply}>
+                <Text style={styles.submitBtnText}>Submit Request</Text>
+              </TouchableOpacity>
+            </ScrollView>
 
             <TouchableOpacity style={styles.closeBtn} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeText}>Cancel</Text>
@@ -220,6 +411,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 10,
+  },
+  flexBtn: {
+    flex: 1,
+  },
+  approveMainBtn: {
+    backgroundColor: '#10B981', // green for approve
   },
   applyBtnText: {
     fontSize: 14,
@@ -393,5 +597,13 @@ const styles = StyleSheet.create({
   },
   closeText: {
     color: COLORS.textSecondary,
+  },
+  pendingRequestItem: {
+    backgroundColor: COLORS.inputBg,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
 });

@@ -200,28 +200,32 @@ export const HRMSProvider = ({ children }) => {
 
     // Fetch real-time iOS / Android mobile hardware GPS Location
     let activeCoords = userCoords;
-    if (!activeCoords) {
-      activeCoords = await locationService.getCurrentLocation();
+    if (!activeCoords && isGeoRequired && maxRadius > 0) {
+      try {
+        activeCoords = await locationService.getCurrentLocation();
+      } catch (err) {
+        console.warn("Could not get location in toggleClockIn", err);
+      }
     }
 
-    const userLat = activeCoords?.latitude ?? 37.7751;
-    const userLon = activeCoords?.longitude ?? -122.4192;
-
+    const userLat = activeCoords?.latitude ?? 0;
+    const userLon = activeCoords?.longitude ?? 0;
     const distMeters = calculateDistanceMeters(compLat, compLon, userLat, userLon);
-    const isBiometric = (locationParam || '').toLowerCase().includes('biometric') || 
-                        (locationParam || '').toLowerCase().includes('face') || 
-                        (notes || '').toLowerCase().includes('biometric') || 
-                        (notes || '').toLowerCase().includes('face');
 
-    // Validate Geofence if required by Company settings and not a biometric face scan
-    if (isGeoRequired && !isBiometric && maxRadius > 0 && distMeters > maxRadius) {
+    // Validate Geofence if required by Company settings
+    if (isGeoRequired && maxRadius > 0 && distMeters > maxRadius) {
       const warningMsg = `Geofence Restricted! You are ${distMeters}m away from ${compLocationName}. Max allowed radius for ${company?.CompanyName || 'Company'} is ${maxRadius}m.`;
       const { Alert } = require('react-native');
       Alert.alert("Geofence Violation", warningMsg);
       throw new Error(warningMsg);
     }
 
-    const verifiedLocationName = locationParam || `${compLocationName} (GPS Validated - ${distMeters}m)`;
+    let verifiedLocationName = locationParam;
+    if (isGeoRequired && maxRadius > 0) {
+      verifiedLocationName = locationParam || `${compLocationName} (GPS Validated - ${distMeters}m)`;
+    } else {
+      verifiedLocationName = locationParam || 'Location Not Required';
+    }
 
     const openLog = (attendanceLogs || []).find(l => {
       const lUser = l.UserID || l.employeeId;

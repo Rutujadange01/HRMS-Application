@@ -1,4 +1,6 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { AuthContext } from './AuthContext';
+import { loanService } from '../services/loanService';
 
 export const PayrollContext = createContext();
 
@@ -15,33 +17,18 @@ export const PayrollProvider = ({ children }) => {
     paymentDate: 5, // 5th of every month
   });
 
+  const { profile } = useContext(AuthContext);
+
   // Advance & Loans
-  const [loans, setLoans] = useState([
-    {
-      id: 'loan_01',
-      employeeId: 'emp_002',
-      employeeName: 'Alex Rivers',
-      type: 'Salary Advance',
-      amount: 15000,
-      emi: 5000,
-      paidAmount: 5000,
-      balance: 10000,
-      status: 'Approved',
-      requestDate: '2026-07-01'
-    },
-    {
-      id: 'loan_02',
-      employeeId: 'emp_003',
-      employeeName: 'Elena Vance',
-      type: 'Personal Loan',
-      amount: 30000,
-      emi: 6000,
-      paidAmount: 12000,
-      balance: 18000,
-      status: 'Pending',
-      requestDate: '2026-07-15'
+  const [loans, setLoans] = useState([]);
+
+  useEffect(() => {
+    const companyId = profile?.companyId;
+    if (companyId) {
+      const unsub = loanService.subscribeLoans(companyId, setLoans);
+      return () => unsub();
     }
-  ]);
+  }, [profile?.companyId]);
 
   // Expense Claims
   const [expenses, setExpenses] = useState([
@@ -63,21 +50,30 @@ export const PayrollProvider = ({ children }) => {
   };
 
   // Add Loan Request
-  const requestLoan = (loanData) => {
-    const newLoan = {
-      id: 'loan_' + Date.now(),
-      status: 'Pending',
-      paidAmount: 0,
-      balance: loanData.amount,
-      requestDate: new Date().toISOString().split('T')[0],
-      ...loanData
-    };
-    setLoans(prev => [newLoan, ...prev]);
+  const requestLoan = async (loanData) => {
+    try {
+      await loanService.addLoan({
+        ...loanData,
+        balance: loanData.amount, // Set initial balance
+        paidAmount: 0,
+        CompanyID: profile?.companyId,
+        UserID: profile?.uid || profile?.UserID,
+        CreatedByUId: profile?.uid || profile?.UserID,
+        CreatedByUName: profile?.name || profile?.FullName || 'Employee',
+      });
+    } catch (err) {
+      console.error("Error requesting loan:", err);
+    }
   };
 
   // Approve / Reject Loan
-  const updateLoanStatus = (id, status) => {
-    setLoans(prev => prev.map(l => l.id === id ? { ...l, status } : l));
+  const updateLoanStatus = async (id, statusOrUpdates) => {
+    try {
+      const updates = typeof statusOrUpdates === 'string' ? { status: statusOrUpdates, Status: statusOrUpdates } : statusOrUpdates;
+      await loanService.updateLoan(id, updates);
+    } catch (err) {
+      console.error("Error updating loan status:", err);
+    }
   };
 
   // Add Expense Claim

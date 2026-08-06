@@ -113,10 +113,7 @@ export const NotificationHubScreen = ({ navigation }) => {
 
     const corrType = item.correction_type || item.correctionType || item.CorrectionType || item.MissPunch_type;
     const typeDisplay = item.LeaveType || item.type || item.expenseType || item.Category || item.Expense_Desc || (type === 'Correction' ? '' : (type === 'MissPunch' ? 'Missed Punch' : type));
-    
-    if (type === 'Correction') {
-      console.log('--- CORRECTION REQUEST ITEM ---', JSON.stringify(item, null, 2));
-    }
+
 
     const fallbackDate = item.CreatedDate ? item.CreatedDate.split('T')[0] : 'N/A';
     const fromDisplay = item.FromDate || item.startDate || item.date || item.leaveDate || item.PostingDate || item.Expense_Date || item.PunchDate || item.Original_Date || item.originalDate || item.MissPunch_Date || fallbackDate;
@@ -134,7 +131,7 @@ export const NotificationHubScreen = ({ navigation }) => {
       if (rIn || rOut) {
         extraCorrectionDetails = `Requested: ${rIn ? `IN ${rIn}` : ''} ${rIn && rOut ? '|' : ''} ${rOut ? `OUT ${rOut}` : ''}`;
       }
-      
+
       const aInVal = item.Added_CheckIn || item.AddedCheckIn;
       const aOutVal = item.Added_CheckOut || item.AddedCheckOut;
       const aIn = aInVal && aInVal !== '--:--' ? aInVal : '';
@@ -190,15 +187,15 @@ export const NotificationHubScreen = ({ navigation }) => {
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
           {(type === 'Correction' || type === 'MissPunch') && corrType ? (
-            <View style={[styles.badge, { 
-              backgroundColor: String(corrType).toLowerCase() === 'in' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(59, 130, 246, 0.1)', 
-              paddingVertical: 4, 
-              paddingHorizontal: 8 
+            <View style={[styles.badge, {
+              backgroundColor: String(corrType).toLowerCase() === 'in' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+              paddingVertical: 4,
+              paddingHorizontal: 8
             }]}>
-              <Text style={{ 
-                fontSize: 11, 
-                color: String(corrType).toLowerCase() === 'in' ? '#000000' : COLORS.primary, 
-                fontWeight: '600' 
+              <Text style={{
+                fontSize: 11,
+                color: String(corrType).toLowerCase() === 'in' ? '#000000' : COLORS.primary,
+                fontWeight: '600'
               }}>
                 {type === 'MissPunch' ? 'Missed ' + corrType : corrType}
               </Text>
@@ -320,7 +317,7 @@ export const NotificationHubScreen = ({ navigation }) => {
               )
             })}
           </ScrollView>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={{ paddingHorizontal: 16, height: 50, justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: COLORS.border }}
             onPress={() => setShowDateModal(true)}
           >
@@ -342,7 +339,7 @@ export const NotificationHubScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))}
           </ScrollView>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={{ paddingHorizontal: 16, paddingVertical: 10, justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: COLORS.border }}
             onPress={() => setShowStatsModal(true)}
           >
@@ -402,7 +399,7 @@ export const NotificationHubScreen = ({ navigation }) => {
                 <X size={24} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
-            
+
             <DatePickerInput
               label="From Date"
               value={fromDate}
@@ -434,19 +431,19 @@ export const NotificationHubScreen = ({ navigation }) => {
                 <X size={24} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
-            
+
             <ScrollView showsVerticalScrollIndicator={false}>
               {(employees || []).map((emp) => {
                 const empId = String(emp.UserID || emp.id || emp.UserCode).toLowerCase().trim();
                 const empName = emp.FullName || emp.name || emp.Name || 'Unknown Employee';
-                
+
                 const currentMonth = new Date().getMonth();
                 const currentYear = new Date().getFullYear();
 
                 const approvedCount = (leaves || []).filter(l => {
                   const lEmpId = String(l.employeeId || l.UserID).toLowerCase().trim();
                   const lStatus = l.status || l.Status || 'Pending';
-                  
+
                   let itemDate = l.CreatedDate || l.createdDate || l.date || l.FromDate || l.Original_Date;
                   let isCurrentMonth = false;
                   if (itemDate) {

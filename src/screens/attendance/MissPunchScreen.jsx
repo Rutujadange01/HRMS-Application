@@ -58,14 +58,12 @@ export const MissPunchScreen = ({ navigation }) => {
   const profName = (profile?.name || profile?.FullName || '').trim().toLowerCase();
   const profEmail = (profile?.email || profile?.Email || '').trim().toLowerCase();
 
-  // Filter requests for Employee vs Admin/HR
-  const myRequests = isEmployee
-    ? (missPunches || []).filter(mp => {
-        const mpUid = (mp.UserID || mp.CreatedByUId || mp.employeeId || '').trim().toLowerCase();
-        const mpName = (mp.CreatedByUName || mp.employeeName || '').trim().toLowerCase();
-        return (profUid && mpUid === profUid) || (profName && mpName === profName);
-      })
-    : (missPunches || []);
+  // Filter requests to only show logged-in user's requests for everyone
+  const myRequests = (missPunches || []).filter(mp => {
+    const mpUid = (mp.UserID || mp.CreatedByUId || mp.employeeId || '').trim().toLowerCase();
+    const mpName = (mp.CreatedByUName || mp.employeeName || '').trim().toLowerCase();
+    return (profUid && mpUid === profUid) || (profName && mpName === profName);
+  });
 
   const filteredRequests = myRequests.filter(mp => {
     if (activeTab === 'All') return true;
@@ -116,7 +114,7 @@ export const MissPunchScreen = ({ navigation }) => {
         if (submitMissPunch) {
           await submitMissPunch(payload);
         }
-        
+
         Alert.alert('Success', 'Miss Punch request submitted for approval.');
       }
       setReason('');
@@ -225,7 +223,7 @@ export const MissPunchScreen = ({ navigation }) => {
           <Clock size={36} color={COLORS.textSecondary} style={{ marginBottom: 8 }} />
           <Text style={styles.emptyTitle}>No Miss Punch Requests Found</Text>
           <Text style={styles.emptySub}>
-            {activeTab === 'All' 
+            {activeTab === 'All'
               ? "You don't have any missed punch requests. Tap '+ New Request' above if you forgot to clock in/out!"
               : `No requests with status '${activeTab}'.`}
           </Text>
@@ -292,23 +290,8 @@ export const MissPunchScreen = ({ navigation }) => {
                 </View>
               )}
 
-              {/* Action Buttons for Admin/HR Approval */}
-              {isAdminOrHR && isPending && (
-                <View style={styles.actionRow}>
-                  <TouchableOpacity style={styles.approveBtn} onPress={() => handleApprove(item)}>
-                    <CheckCircle2 size={16} color="#ffffff" />
-                    <Text style={styles.approveBtnText}>Approve & Update Punch</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.rejectBtn} onPress={() => handleReject(item)}>
-                    <XCircle size={16} color={COLORS.danger} />
-                    <Text style={styles.rejectBtnText}>Reject</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
               {/* Employee Action Buttons (Edit/Delete) */}
-              {isEmployee && (isPending || isRejected) && (
+              {(isPending || isRejected) && (
                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 }}>
                   <TouchableOpacity style={[{ padding: 8, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: 8, marginRight: isPending ? 12 : 0 }]} onPress={() => openEditModal(item)}>
                     {isRejected ? <Eye size={16} color={COLORS.primary} /> : <Edit2 size={16} color={COLORS.primary} />}
@@ -351,13 +334,13 @@ export const MissPunchScreen = ({ navigation }) => {
                 onChangeText={setRejectReason}
               />
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12 }}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setRejectItem(null)}
                   style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8 }}
                 >
                   <Text style={{ fontSize: 15, color: COLORS.textSecondary, fontWeight: '600' }}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={submitReject}
                   style={{ backgroundColor: COLORS.danger, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8 }}
                 >
@@ -387,48 +370,48 @@ export const MissPunchScreen = ({ navigation }) => {
               <View pointerEvents={isReadOnly ? 'none' : 'auto'}>
                 {/* Date Input */}
                 <DatePickerInput
-                label="Date of Missed Punch"
-                value={missPunchDate}
-                onChangeText={setMissPunchDate}
-              />
+                  label="Date of Missed Punch"
+                  value={missPunchDate}
+                  onChangeText={setMissPunchDate}
+                />
 
-              {/* Punch Type Selector */}
-              <Text style={styles.formLabel}>Missed Punch Type</Text>
-              <View style={styles.typeSelectorRow}>
-                {['In', 'Out', 'Both'].map((t) => (
-                  <TouchableOpacity
-                    key={t}
-                    style={[styles.typeChipBtn, missPunchType === t && styles.typeChipBtnActive]}
-                    onPress={() => {
-                      setMissPunchType(t);
-                      if (t === 'In') setRequestedTime('09:00 AM');
-                      if (t === 'Out') setRequestedTime('06:00 PM');
-                    }}
-                  >
-                    <Text style={[styles.typeChipBtnText, missPunchType === t && styles.typeChipBtnTextActive]}>
-                      Missed {t}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                {/* Punch Type Selector */}
+                <Text style={styles.formLabel}>Missed Punch Type</Text>
+                <View style={styles.typeSelectorRow}>
+                  {['In', 'Out', 'Both'].map((t) => (
+                    <TouchableOpacity
+                      key={t}
+                      style={[styles.typeChipBtn, missPunchType === t && styles.typeChipBtnActive]}
+                      onPress={() => {
+                        setMissPunchType(t);
+                        if (t === 'In') setRequestedTime('09:00 AM');
+                        if (t === 'Out') setRequestedTime('06:00 PM');
+                      }}
+                    >
+                      <Text style={[styles.typeChipBtnText, missPunchType === t && styles.typeChipBtnTextActive]}>
+                        Missed {t}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-              {/* Exact Time Selection */}
-              <TimePickerInput
-                label="Requested Punch Time"
-                value={requestedTime}
-                onChangeText={setRequestedTime}
-              />
+                {/* Exact Time Selection */}
+                <TimePickerInput
+                  label="Requested Punch Time"
+                  value={requestedTime}
+                  onChangeText={setRequestedTime}
+                />
 
-              <CustomInput
-                label="Reason for Missed Punch"
-                placeholder="Explain why punch was missed (e.g. Biometric scanner issue / On-field meeting)"
-                value={reason}
-                onChangeText={setReason}
-                icon={FileText}
-                multiline={true}
-                numberOfLines={3}
-                editable={!isReadOnly}
-              />
+                <CustomInput
+                  label="Reason for Missed Punch"
+                  placeholder="Explain why punch was missed (e.g. Biometric scanner issue / On-field meeting)"
+                  value={reason}
+                  onChangeText={setReason}
+                  icon={FileText}
+                  multiline={true}
+                  numberOfLines={3}
+                  editable={!isReadOnly}
+                />
               </View>
 
               {isReadOnly && formRejectionReason ? (
